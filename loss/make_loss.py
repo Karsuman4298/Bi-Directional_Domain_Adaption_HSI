@@ -5,10 +5,10 @@ from .triplet_loss import TripletLoss
 from .center_loss import CenterLoss
 from .mmd_loss import MMD_loss
 
-def make_loss(cfg, num_classes):   
+def make_loss(cfg, num_classes, device):   
     sampler = cfg.loss_type
     feat_dim = 2048
-    center_criterion = CenterLoss(num_classes=num_classes, feat_dim=feat_dim, use_gpu=True, dev=int(cfg.device))  # center loss
+    center_criterion = CenterLoss(num_classes=num_classes, feat_dim=feat_dim, use_gpu=True, dev=device)  # center loss
     
     if cfg.labelsmooth == 'on':
         xent = CrossEntropyLabelSmooth(num_classes=num_classes)    

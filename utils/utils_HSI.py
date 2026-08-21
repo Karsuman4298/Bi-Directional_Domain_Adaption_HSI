@@ -20,6 +20,8 @@ def seed_worker(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
     np.random.seed(seed)  # Numpy module.
     random.seed(seed)  # Python random module.
     torch.backends.cudnn.benchmark = False
@@ -33,8 +35,11 @@ def get_device(ordinal):
     elif torch.cuda.is_available():
         print("Computation on CUDA GPU device {}".format(ordinal))
         device = torch.device('cuda:{}'.format(ordinal))
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        print("Computation on MPS device")
+        device = torch.device('mps')
     else:
-        print("/!\\ CUDA was requested but is not available! Computation will go on CPU. /!\\")
+        print("/!\\ CUDA/MPS was requested but is not available! Computation will go on CPU. /!\\")
         device = torch.device('cpu')
     return device
 
@@ -43,6 +48,8 @@ def seed_worker(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+    elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
     np.random.seed(seed)  # Numpy module.
     random.seed(seed)  # Python random module.
     torch.backends.cudnn.benchmark = False

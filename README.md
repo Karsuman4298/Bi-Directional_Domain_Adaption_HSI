@@ -7,7 +7,7 @@ Cross-domain Hyperspectral Image Classification based on Bi-directional Domain A
 [[Paper 📰]](https://ieeexplore.ieee.org/abstract/document/11072185) [[Datasets 🤗]](https://github.com/YuxiangZhang-BIT/Data-CSHSI)
 
 </div>
-
+   
 ## Overview
 
 This repository provides a PyTorch implementation of **Cross-Domain Hyperspectral Image Classification Based on Bi-Directional Domain Adaptation (BiDA)** for cross-temporal and cross-scene hyperspectral image classification.
@@ -36,6 +36,8 @@ Example (CUDA 12.1):
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
+
+*(Note: Apple Silicon / M-series Macs are also dynamically supported using the PyTorch MPS backend! No special installation is needed aside from the standard PyTorch for Mac.)*
 
 ### 3. Install the remaining dependencies
 
@@ -88,6 +90,13 @@ Typical artifacts:
 
 - `model_ts_best*.pth`: model checkpoint with best OA
 - `results_*.mat`: statistics including OA and confusion matrix
+
+## Inference and Visualizations
+
+We provide two methods for running inference, computing the detailed confusion matrix, and plotting the classification maps on a trained model:
+
+1. **Jupyter Notebook (`inference.ipynb`)**: An interactive notebook that loads the best model checkpoint, evaluates it on the target dataset using a sliding window, and plots the classification map vs ground truth directly in the browser.
+2. **Automated Script (`generate_outputs.py`)**: Runs the same inference as above but automatically exports high-resolution `.png` images of the Confusion Matrix and Classification Maps into the `inference_outputs/` directory.
 
 ## Key Arguments
 

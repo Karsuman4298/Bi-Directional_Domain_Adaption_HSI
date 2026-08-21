@@ -42,9 +42,16 @@ if __name__ == "__main__":
                         help='random seed ')
     opts = parser.parse_args()
 
-    device = torch.device("cuda:{}".format(opts.device))
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+        print("experiments will run on MPS device")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda:{}".format(opts.device))
+        print("experiments will run on GPU device {}".format(opts.device))
+    else:
+        device = torch.device("cpu")
+        print("experiments will run on CPU")
 
-    print("experiments will run on GPU device {}".format(opts.device))
     print("model = {}".format(opts.model))    
     print("source dataset = {}".format(opts.source_name))
     print("target dataset = {}".format(opts.target_name))
@@ -108,7 +115,7 @@ if __name__ == "__main__":
     optimizer, scheduler = load_scheduler(opts.model, model, opts)
 
     # criterion = nn.CrossEntropyLoss()
-    criterion, center_criterion = make_loss(opts, num_classes=num_classes)
+    criterion, center_criterion = make_loss(opts, num_classes=num_classes, device=device)
     
     # where to save checkpoint model
     model_dir = "./checkpoints/" + opts.model + '/' + opts.source_name + 'to' + opts.target_name
