@@ -115,8 +115,12 @@ def validation(network, val_loader, device, num_classes, show=False, ema=False):
     
     if show:
         results = metrics(ps, ys, n_classes=num_classes)
-        print(results['Confusion_matrix'], '\n', 'TPR:', np.round(
-            results['TPR']*100, 2), '\n', 'OA:', results['Accuracy'])
+        from sklearn.metrics import classification_report
+        print("Confusion Matrix:\n", results['Confusion_matrix'])
+        print("Classification Report:\n", classification_report(ys, ps, digits=4))
+        print(f"OA: {results['Accuracy']:.4f}")
+        print(f"AA: {np.mean(results['TPR']) * 100:.4f}")
+        print(f"Kappa: {results['Kappa']:.4f}")
         return overall_acc, results
     return overall_acc
 
