@@ -86,7 +86,10 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                             {'lr': opts.lr, 'lambda1': opts.lambda1, 'depth': opts.depth, 're_ratio':opts.re_ratio, 'results': results, 
                              'seed': opts.seed, 'lambda2':opts.lambda2})
 
-    print("Training complete. Generating final classification report...")
+    print(f"Training complete. Loading best model (acc: {best_test_acc:.4f}) and generating final classification report...")
+    best_model_path = os.path.join(saving_path, f'model_ts_best{best_test_acc:.4f}_{opts.seed}.pth')
+    if os.path.exists(best_model_path):
+        network.load_state_dict(torch.load(best_model_path))
     validation(network, test_loader, device, num_classes, show=True, print_report=True)
 
 def validation(network, val_loader, device, num_classes, show=False, ema=False, print_report=False):
