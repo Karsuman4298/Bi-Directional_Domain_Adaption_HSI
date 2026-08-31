@@ -73,7 +73,7 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
             scheduler.step()
 
         if e % opts.log_interval == 0:
-            ts_acc, results = validation(network, test_loader, device, num_classes, show=True)
+            ts_acc, results = validation(network, test_loader, device, num_classes, show=True, print_report=False)
             is_best = ts_acc >= best_test_acc
             print('best_test_acc: {:.4f}'.format(best_test_acc))
             if ts_acc > best_test_acc:
@@ -86,8 +86,10 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                             {'lr': opts.lr, 'lambda1': opts.lambda1, 'depth': opts.depth, 're_ratio':opts.re_ratio, 'results': results, 
                              'seed': opts.seed, 'lambda2':opts.lambda2})
 
+    print("Training complete. Generating final classification report...")
+    validation(network, test_loader, device, num_classes, show=True, print_report=True)
 
-def validation(network, val_loader, device, num_classes, show=False, ema=False):
+def validation(network, val_loader, device, num_classes, show=False, ema=False, print_report=False):
     num_correct = 0.
     total_num = 0.
     if ema:
@@ -115,12 +117,13 @@ def validation(network, val_loader, device, num_classes, show=False, ema=False):
     
     if show:
         results = metrics(ps, ys, n_classes=num_classes)
-        from sklearn.metrics import classification_report
-        print("Confusion Matrix:\n", results['Confusion_matrix'])
-        print("Classification Report:\n", classification_report(ys, ps, digits=4))
-        print(f"OA: {results['Accuracy']:.4f}")
-        print(f"AA: {np.mean(results['TPR']) * 100:.4f}")
-        print(f"Kappa: {results['Kappa']:.4f}")
+        if print_report:
+            from sklearn.metrics import classification_report
+            print("Confusion Matrix:\n", results['Confusion_matrix'])
+            print("Classification Report:\n", classification_report(ys, ps, digits=4))
+            print(f"OA: {results['Accuracy']:.4f}")
+            print(f"AA: {np.mean(results['TPR']) * 100:.4f}")
+            print(f"Kappa: {results['Kappa']:.4f}")
         return overall_acc, results
     return overall_acc
 
