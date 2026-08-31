@@ -86,6 +86,13 @@ agent_q2 = agent_q2.reshape(B, self.num_heads, C // self.num_heads, self.num_age
 ```
 *Implementation detail:* MPS (Apple Silicon GPU) backend has a known bug with `AdaptiveAvgPool1d` when the input size is not strictly divisible by the output size. Therefore, the codebase utilizes a fallback `_pool_1d` method that uses `F.interpolate(mode='linear')` dynamically when it detects the `mps` device.
 
+**How AdaptiveAvgPool1d Works and the Information Bottleneck:**
+Unlike the original Agent Attention paper which applied `AdaptiveAvgPool2d` across 2D spatial feature maps, `AgentBiDA` operates on a flattened sequence of semantic tokens. Thus, we utilize `AdaptiveAvgPool1d`. 
+By transposing the Query tensors to `[Batch, Heads, Feature_Dim, Sequence_Length]`, the 1D pooling mathematically slides across the sequence dimension, averaging adjacent tokens down from $N$ to the bottleneck size $n$.
+
+*Is there a loss of information?* 
+Yes—and this is entirely intentional! Pooling is a lossy operation, which purposefully strips out high-frequency, local variations (e.g., domain-specific sensor noise, lighting artifacts, and background clutter). What remains are the robust, low-frequency global semantic features. This forms an **Information Bottleneck**. When the model attempts to align the Source and Target domains, aligning these noise-free semantic summaries makes cross-domain adaptation significantly more robust and accurate.
+
 ### 3.2 Handling Bi-Directional Cross-Domain Couplings
 The original BiDA framework passes **four** streams of data during training:
 1. `x`: Source Domain
