@@ -15,7 +15,7 @@ class Opts:
     pass
 
 opts = Opts()
-opts.model = 'BiDA'
+opts.model = 'BiDA_Agent'
 opts.source_name = 'Houston13'
 opts.target_name = 'Houston18'
 opts.dataset_dir = './Houston/'
@@ -37,7 +37,8 @@ n_classes = len(labels)
 
 checkpoint_dir = f'./checkpoints/{opts.model}/{opts.source_name}to{opts.target_name}'
 model_files = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pth')]
-best_model_file = sorted(model_files)[-1]
+model_files.sort(key=lambda x: os.path.getmtime(os.path.join(checkpoint_dir, x)))
+best_model_file = model_files[-1]
 checkpoint_path = os.path.join(checkpoint_dir, best_model_file)
 
 network = get_model(opts.model, opts.source_name, opts.patch_size, opts)
@@ -91,7 +92,7 @@ sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=labels, yticklabe
 plt.title(f'Confusion Matrix (OA: {results["Accuracy"]:.2f}%)')
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
-plt.savefig('inference_outputs/confusion_matrix.png', bbox_inches='tight', dpi=300)
+plt.savefig('inference_outputs/learnable_agent_confusion_matrix.png', bbox_inches='tight', dpi=300)
 plt.close()
 
 # Save Classification Maps
@@ -108,7 +109,7 @@ plt.imshow(gt_tar, cmap=cmap, vmin=-1, vmax=n_classes-1)
 plt.axis('off')
 
 plt.tight_layout()
-plt.savefig('inference_outputs/classification_maps.png', bbox_inches='tight', dpi=300)
+plt.savefig('inference_outputs/learnable_agent_classification_maps.png', bbox_inches='tight', dpi=300)
 plt.close()
 
 print('Outputs saved to inference_outputs/')

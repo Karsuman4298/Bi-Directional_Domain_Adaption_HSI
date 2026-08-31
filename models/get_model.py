@@ -36,6 +36,9 @@ def get_model(model_name, dataset_name, patch_size, opts=None, ema=False):
 
     elif model_name == 'BiDA':
         model = BiDA(dataset_name, opts)
+    elif model_name == 'BiDA_Agent':
+        from .BiDA_Agent import BiDA as BiDA_Agent_model
+        model = BiDA_Agent_model(dataset_name, opts)
     else:
         raise KeyError("{} model is not supported yet".format(model_name))
 
