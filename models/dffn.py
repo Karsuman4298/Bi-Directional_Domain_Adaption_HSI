@@ -115,7 +115,8 @@ def dffn(dataset, patch_size):
 
     elif dataset == 'hrl':
         model = DFFN(bands=176, classes=14, layers_num=[4,4,4])
-
+    elif dataset in ['Houston18', 'Houston13']:
+        model = DFFN(bands=48, classes=7, layers_num=[4,4,4])
     return model
 
 

@@ -188,7 +188,9 @@ def ssftt(dataset, patch_size):
     elif dataset == 'whulk':
         model = SSFTTnet(n_bands=270, num_classes=9)  
     elif dataset == 'hrl':
-        model = SSFTTnet(n_bands=176, num_classes=14) 
+        model = SSFTTnet(n_bands=176, num_classes=14)
+    elif dataset in ['Houston18', 'Houston13']:
+        model = SSFTTnet(n_bands=48, num_classes=7)
     return model
 
 

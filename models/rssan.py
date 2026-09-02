@@ -131,6 +131,8 @@ def rssan(dataset, patch_size):
         model = RSSAN(n_bands=270, kernel_number=32, patch_size=patch_size, n_classes=9)
     elif dataset == 'hrl':
         model = RSSAN(n_bands=176, kernel_number=32, patch_size=patch_size, n_classes=14)
+    elif dataset in ['Houston18', 'Houston13']:
+        model = RSSAN(n_bands=48, kernel_number=32, patch_size=patch_size, n_classes=7)
     elif 'MJG' in dataset.split('_'):
         model = RSSAN(n_bands=64, kernel_number=32, patch_size=patch_size, n_classes=5)
     return model

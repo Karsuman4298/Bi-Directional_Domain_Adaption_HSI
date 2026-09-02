@@ -150,6 +150,12 @@ def ablstm(dataset, patch_size):
             SpectralAttention(), 
             BiLSTM(hidden_size=64, num_layers=2, dropout=0.5, n_class=14)
             ) 
+    elif dataset in ['Houston18', 'Houston13']:
+        model= nn.Sequential(
+            SpatialAttention(input_c=48, patch_size=patch_size), 
+            SpectralAttention(), 
+            BiLSTM(hidden_size=64, num_layers=2, dropout=0.5, n_class=7)
+            ) 
         
     elif 'MJG' in dataset.split('_'):
         model= nn.Sequential(

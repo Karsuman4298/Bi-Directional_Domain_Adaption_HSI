@@ -207,3 +207,89 @@ def softmax_mse_loss(input_logits, target_logits):
     num_classes = input_logits.size()[1]
     return F.mse_loss(input_softmax, target_softmax, reduction='sum') / num_classes
 
+
+def train_standard(network, optimizer, criterion, num_classes, train_loader, val_loader, opts, saving_path, device, scheduler):
+    global_step = 0
+    best_test_acc = 0
+    losses = []
+    
+    for e in tqdm(range(1, opts.epoch+1), desc="training the standard network"):
+        network.train()
+        for batch_idx, data_src in enumerate(train_loader):
+            images, targets = data_src
+            images, targets = images.to(device), targets.to(device)
+            
+            optimizer.zero_grad()
+            out_x = network(images)
+            if isinstance(out_x, tuple): # Some models return multiple items
+                out_x = out_x[0]
+            loss = criterion(out_x, targets)
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+            global_step += 1
+                
+        if e % 10 == 0 or e == 1:
+            mean_losses = np.mean(losses)
+            train_info = "train at epoch {}/{}, loss={:.6f}"
+            train_info = train_info.format(e, opts.epoch, mean_losses)
+            tqdm.write(train_info)
+            losses = []
+        else:
+            losses = []
+
+        if scheduler is not None:
+            scheduler.step()
+
+        if e % opts.log_interval == 0:
+            ts_acc, results = validation_standard(network, val_loader, device, num_classes, show=True, print_report=False)
+            is_best = ts_acc >= best_test_acc
+            print('best_test_acc: {:.4f}'.format(best_test_acc))
+            if ts_acc > best_test_acc:
+                best_test_acc = max(ts_acc, best_test_acc)
+                save_ts_checkpoint(network, is_best, saving_path,
+                                epoch=e, acc=best_test_acc, tmp_acc=ts_acc, seed=opts.seed)
+
+                io.savemat(os.path.join(saving_path,
+                                        'results' + f'_{best_test_acc:.4f}_{opts.seed}' +'.mat'),
+                            {'lr': opts.lr, 'results': results, 'seed': opts.seed})
+
+    print(f"Training complete. Loading best model (acc: {best_test_acc:.4f}) and generating final classification report...")
+    best_model_path = os.path.join(saving_path, f'model_ts_best{best_test_acc:.4f}_{opts.seed}.pth')
+    if os.path.exists(best_model_path):
+        network.load_state_dict(torch.load(best_model_path))
+    validation_standard(network, val_loader, device, num_classes, show=True, print_report=True)
+
+def validation_standard(network, val_loader, device, num_classes, show=False, print_report=False):
+    num_correct = 0.
+    total_num = 0.
+    network.eval()
+
+    ps = []
+    ys = []
+    for batch_idx, (images, targets) in enumerate(val_loader):
+        images, targets = images.to(device), targets.to(device)
+        outputs = network(images)
+        if isinstance(outputs, tuple):
+            outputs = outputs[0]
+        _, outputs = torch.max(outputs, dim=1)
+        ps.append(outputs.detach().cpu().numpy())
+        ys.append(targets.detach().cpu().numpy())
+        for output, target in zip(outputs, targets):
+            num_correct = num_correct + (output.item() == target.item())
+            total_num = total_num + 1
+    overall_acc = num_correct / total_num
+    ps = np.concatenate(ps)
+    ys = np.concatenate(ys)
+    
+    if show:
+        results = metrics(ps, ys, n_classes=num_classes)
+        if print_report:
+            from sklearn.metrics import classification_report
+            print("Confusion Matrix:\n", results['Confusion_matrix'])
+            print("Classification Report:\n", classification_report(ys, ps, digits=4))
+            print(f"OA: {results['Accuracy']:.4f}")
+            print(f"AA: {np.mean(results['TPR']) * 100:.4f}")
+            print(f"Kappa: {results['Kappa']:.4f}")
+        return overall_acc, results
+    return overall_acc

@@ -116,6 +116,8 @@ def cnn3d(dataset, patch_size):
         model = CNN3D(input_channels=270, n_classes=9, patch_size=patch_size)
     elif dataset == 'hrl':
         model = CNN3D(input_channels=176, n_classes=14, patch_size=patch_size)
+    elif dataset in ['Houston18', 'Houston13']:
+        model = CNN3D(input_channels=48, n_classes=7, patch_size=patch_size)
     return model
 
 

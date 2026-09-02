@@ -257,6 +257,20 @@ def speformer(dataset, patch_size):
             emb_dropout = 0.1,
             mode = "CAF"
         )
+    elif dataset in ['Houston18', 'Houston13']:
+        model = ViT(
+            image_size=patch_size,
+            near_band=3,
+            num_patches=48, 
+            num_classes=7,
+            dim = 64,
+            depth = 5,
+            heads = 4,
+            mlp_dim = 8,
+            dropout = 0.1,
+            emb_dropout = 0.1,
+            mode = "CAF"
+        )
     return model
 
 

@@ -33,7 +33,7 @@ def load_scheduler(model_name, model, opts):
         # optimizer = optim.Adam(model.parameters(), lr=5e-4)
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [30, 60, 90, 120, 150, 180, 210, 240, 270], gamma=0.9)
 
-    elif model_name == 'ssftt' or model_name == 'BiDA' or model_name == 'BiDA_Agent':
+    elif model_name in ['ssftt', 'BiDA', 'BiDA_Agent', 'AgentBiDA']:
         # optimizer = optim.Adam(model.parameters(), lr=opts.lr)
         optimizer = optim.SGD(model.parameters(), lr=opts.lr)
         scheduler = None

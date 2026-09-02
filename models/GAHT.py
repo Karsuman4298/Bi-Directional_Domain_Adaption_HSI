@@ -170,6 +170,8 @@ def GAHT(dataset, patch_size):
         model = MyTransformer(img_size=patch_size, in_chans=270, num_classes=9, n_groups=[2, 2, 2], depths=[2, 2, 1])
     elif dataset == 'hrl':
         model = MyTransformer(img_size=patch_size, in_chans=176, num_classes=14, n_groups=[4, 4, 4], depths=[1, 2, 1])
+    elif dataset in ['Houston18', 'Houston13']:
+        model = MyTransformer(img_size=patch_size, in_chans=48, num_classes=7, n_groups=[4, 4, 4], depths=[1, 2, 1])
     return model
 
 if __name__ == "__main__":
