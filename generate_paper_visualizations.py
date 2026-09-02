@@ -85,14 +85,14 @@ def run_experiment(opts):
             train_loader = torch.utils.data.DataLoader(train_set, opts.bs, generator=g, drop_last=False, shuffle=True, num_workers=opts.num_workers)
             val_loader = torch.utils.data.DataLoader(val_set, opts.bs, generator=g, drop_last=False, shuffle=False, num_workers=opts.num_workers)
 
+            test_dataset = HSIDataset(img_tar_pad, test_gt_tar_pad, patch_size=opts.patch_size, data_aug=False)
+            test_loader = torch.utils.data.DataLoader(test_dataset, opts.bs, generator=g, drop_last=False, shuffle=False, num_workers=opts.num_workers)
+
             if is_bida:
                 test_dataset_noise = HSIDataset(img_tar_pad, test_gt_tar_pad, patch_size=opts.patch_size, data_aug=True)
-                test_dataset = HSIDataset(img_tar_pad, test_gt_tar_pad, patch_size=opts.patch_size, data_aug=False)
                 test_loader_noise = torch.utils.data.DataLoader(test_dataset_noise, opts.bs, generator=g, drop_last=False, shuffle=True, num_workers=opts.num_workers)
-                test_loader = torch.utils.data.DataLoader(test_dataset, opts.bs, generator=g, drop_last=False, shuffle=False, num_workers=opts.num_workers)
             else:
                 test_loader_noise = None
-                test_loader = None
                 
             # Initialize Models
             model = get_model(model_name, opts.target_name, opts.patch_size, opts).to(device)
@@ -122,7 +122,7 @@ def run_experiment(opts):
                       opts, checkpoint_dir, device, scheduler)
             else:
                 train_standard(model, optimizer, criterion, num_classes,
-                               train_loader, val_loader, opts, checkpoint_dir, device, scheduler)
+                               train_loader, test_loader, opts, checkpoint_dir, device, scheduler)
                   
             # Find best checkpoint for this seed
             model_files = [f for f in os.listdir(checkpoint_dir) if f.startswith('model_ts_best') and f.endswith('.pth')]
