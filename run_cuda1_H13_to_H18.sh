@@ -20,7 +20,7 @@ echo "========================================================="
 python3 generate_paper_visualizations.py \
     --source_name Houston13 \
     --target_name Houston18 \
-    --output_dir ./paper_visualizations_H13_to_H18 \
+    --output_dir ./paper_visualizations_v2_H13_to_H18 \
     --models $MODELS \
     --epoch $EPOCHS \
     --bs $BATCH_SIZE \
