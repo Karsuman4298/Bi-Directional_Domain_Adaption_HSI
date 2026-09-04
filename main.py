@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     from train_pipeline import train_standard
     try:
-        if opts.model == 'BiDA':
+        if opts.model in ['BiDA', 'AgentBiDA', 'BiDA_Agent']:
             train(model, model_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, model_dir, device, scheduler)
         else:
             # Standard single-domain training pipeline for baselines like cnn3d, dffn, etc.
