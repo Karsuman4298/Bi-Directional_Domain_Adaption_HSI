@@ -384,7 +384,7 @@ if __name__ == '__main__':
     parser.add_argument("--lambda2", type=float, default=1e+0)
     parser.add_argument("--log_interval", type=float, default=10)
     parser.add_argument('--re_ratio', type=int, default=1)
-    parser.add_argument('--num_agents', type=int, default=16)
+    parser.add_argument('--num_agents', type=int, default=4)
     parser.add_argument('--num_heads', type=int, default=8)
     parser.add_argument('--seeds', type=int, nargs='+', default=[2100, 2101, 2102, 2103, 2104], help='List of random seeds to run')
     parser.add_argument('--output_dir', type=str, default='./paper_visualizations')
