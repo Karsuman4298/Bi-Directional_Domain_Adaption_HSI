@@ -8,7 +8,7 @@ SEEDS="2100 2101 2102 2103 "
 
 # AgentBiDA optimized hyperparameters
 DEPTH=3
-NUM_AGENTS=4
+NUM_AGENTS=5
 NUM_HEADS=8
 
 # Models to evaluate
