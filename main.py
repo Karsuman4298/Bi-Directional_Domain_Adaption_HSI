@@ -120,8 +120,13 @@ if __name__ == "__main__":
     # where to save checkpoint model
     model_dir = "./checkpoints/" + opts.model + '/' + opts.source_name + 'to' + opts.target_name
 
+    from train_pipeline import train_standard
     try:
-        train(model, model_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, model_dir, device, scheduler)
+        if opts.model == 'BiDA':
+            train(model, model_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, model_dir, device, scheduler)
+        else:
+            # Standard single-domain training pipeline for baselines like cnn3d, dffn, etc.
+            train_standard(model, optimizer, criterion[0] if isinstance(criterion, tuple) else criterion, num_classes, train_loader, test_loader, opts, model_dir, device, scheduler)
     except KeyboardInterrupt:
         print('"ctrl+c" is pused, the training is over')
 

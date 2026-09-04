@@ -59,15 +59,25 @@ class AgentAttention(nn.Module):
 
     def _pool_1d(self, x, num_agents):
         # x is [B*H, D_h, N]
+        # Always preserve the CLS token (index 0) as its own agent to prevent semantic blurring
+        cls_token = x[:, :, 0:1] 
+        patch_tokens = x[:, :, 1:]
+        
+        pool_size = num_agents - 1
+        
+        # If pool_size is 0, the bottleneck is extreme (only the CLS token acts as an agent)
+        if pool_size <= 0:
+            return cls_token
+            
         if x.device.type == 'mps':
-            # AdaptiveAvgPool1d is buggy on MPS for non-divisible sizes, so we fallback to CPU or interpolate
-            # Using interpolate with nearest or linear
             import torch.nn.functional as F
-            # Interpolate expects float type, we can use it to resize the sequence dimension
-            return F.interpolate(x, size=num_agents, mode='linear', align_corners=False)
+            pooled_patches = F.interpolate(patch_tokens, size=pool_size, mode='linear', align_corners=False)
         else:
             import torch.nn.functional as F
-            return F.adaptive_avg_pool1d(x, num_agents)
+            pooled_patches = F.adaptive_avg_pool1d(patch_tokens, pool_size)
+            
+        # Re-concatenate the pristine CLS agent with the pooled spatial agents
+        return torch.cat((cls_token, pooled_patches), dim=2)
 
     def forward(self, x, x2, inference_target_only=False, debug_shapes=False):
         B, N, C = x2.shape
