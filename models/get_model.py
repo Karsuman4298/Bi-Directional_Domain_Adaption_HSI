@@ -42,6 +42,9 @@ def get_model(model_name, dataset_name, patch_size, opts=None, ema=False):
     elif model_name == 'AgentBiDA':
         from .agent_bida import AgentBiDA as AgentBiDA_model
         model = AgentBiDA_model(dataset_name, opts)
+    elif model_name == 'SelfAttnAgentBiDA':
+        from .self_attention_agent_bida import AgentBiDA as SelfAttnAgentBiDA_model
+        model = SelfAttnAgentBiDA_model(dataset_name, opts)
     else:
         raise KeyError("{} model is not supported yet".format(model_name))
 

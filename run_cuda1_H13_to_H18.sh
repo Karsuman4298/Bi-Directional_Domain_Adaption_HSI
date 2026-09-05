@@ -12,7 +12,7 @@ NUM_AGENTS=5
 NUM_HEADS=8
 
 # Models to evaluate
-MODELS="GAHT cnn3d ablstm dffn m3ddcnn rssan speformer ssftt BiDA AgentBiDA"
+MODELS="GAHT cnn3d ablstm dffn m3ddcnn rssan speformer ssftt BiDA AgentBiDA SelfAttnAgentBiDA"
 
 echo "========================================================="
 echo " RUN 2: Houston13 (Source) -> Houston18 (Target) on CUDA 1"
@@ -20,7 +20,7 @@ echo "========================================================="
 python3 generate_paper_visualizations.py \
     --source_name Houston13 \
     --target_name Houston18 \
-    --output_dir ./paper_visualizations_v3_H13_to_H18 \
+    --output_dir ./paper_visualizations_SelfAttnAgent_H13_to_H18 \
     --models $MODELS \
     --epoch $EPOCHS \
     --bs $BATCH_SIZE \
@@ -29,4 +29,5 @@ python3 generate_paper_visualizations.py \
     --num_agents $NUM_AGENTS \
     --num_heads $NUM_HEADS \
     --seeds $SEEDS \
-    --device 1
+    --device 1 \
+    --no_vis

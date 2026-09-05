@@ -47,7 +47,7 @@ def run_experiment(opts):
         print(f" Evaluating Model: {model_name}")
         print(f"*******************************************************")
         
-        is_bida = model_name in ['BiDA', 'AgentBiDA', 'BiDA_Agent']
+        is_bida = model_name in ['BiDA', 'AgentBiDA', 'BiDA_Agent', 'SelfAttnAgentBiDA']
         
         model_results[model_name] = {'oa': [], 'aa': [], 'kappa': [], 'class_accs': []}
         
@@ -192,32 +192,33 @@ def run_experiment(opts):
             model_results[model_name]['class_accs'].append(class_accs)
             model_results[model_name]['pred_map'] = pred_map_masked
             
-            # Plot Confusion Matrix
-            plt.figure(figsize=(10, 8))
-            cm = results['Confusion_matrix']
-            sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=labels_tar, yticklabels=labels_tar)
-            plt.title(f'{model_name} Confusion Matrix - Seed {seed} (OA: {oa:.2f}%)')
-            plt.xlabel('Predicted Label')
-            plt.ylabel('True Label')
-            plt.savefig(os.path.join(opts.output_dir, f'{model_name}_confusion_matrix_seed_{seed}.png'), bbox_inches='tight', dpi=300)
-            plt.close()
-
-            # Plot Classification Map
-            cmap = plt.get_cmap('jet', num_classes + 1)
-            plt.figure(figsize=(16, 8))
-            plt.subplot(1, 2, 1)
-            plt.title(f'{model_name} Classification Map - Seed {seed}')
-            plt.imshow(pred_map_masked, cmap=cmap, vmin=-1, vmax=num_classes-1)
-            plt.axis('off')
-
-            plt.subplot(1, 2, 2)
-            plt.title('Ground Truth Map')
-            plt.imshow(gt_tar_orig, cmap=cmap, vmin=-1, vmax=num_classes-1)
-            plt.axis('off')
-
-            plt.tight_layout()
-            plt.savefig(os.path.join(opts.output_dir, f'{model_name}_classification_map_seed_{seed}.png'), bbox_inches='tight', dpi=300)
-            plt.close()
+            if not opts.no_vis:
+                # Plot Confusion Matrix
+                plt.figure(figsize=(10, 8))
+                cm = results['Confusion_matrix']
+                sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=labels_tar, yticklabels=labels_tar)
+                plt.title(f'{model_name} Confusion Matrix - Seed {seed} (OA: {oa:.2f}%)')
+                plt.xlabel('Predicted Label')
+                plt.ylabel('True Label')
+                plt.savefig(os.path.join(opts.output_dir, f'{model_name}_confusion_matrix_seed_{seed}.png'), bbox_inches='tight', dpi=300)
+                plt.close()
+    
+                # Plot Classification Map
+                cmap = plt.get_cmap('jet', num_classes + 1)
+                plt.figure(figsize=(16, 8))
+                plt.subplot(1, 2, 1)
+                plt.title(f'{model_name} Classification Map - Seed {seed}')
+                plt.imshow(pred_map_masked, cmap=cmap, vmin=-1, vmax=num_classes-1)
+                plt.axis('off')
+    
+                plt.subplot(1, 2, 2)
+                plt.title('Ground Truth Map')
+                plt.imshow(gt_tar_orig, cmap=cmap, vmin=-1, vmax=num_classes-1)
+                plt.axis('off')
+    
+                plt.tight_layout()
+                plt.savefig(os.path.join(opts.output_dir, f'{model_name}_classification_map_seed_{seed}.png'), bbox_inches='tight', dpi=300)
+                plt.close()
         
     # Aggregate and Save Unified Report
     report_path = os.path.join(opts.output_dir, 'paper_results_table.txt')
@@ -311,13 +312,13 @@ def run_experiment(opts):
             row_ka += f"{ka_m:.2f} ± {ka_s:.2f}".ljust(20) + " | "
             
             if len(opts.seeds) > 1:
-                vals_oa.append(f"\\textbf{{{oa_m:.2f}}}$\\pm${oa_s:.2f}" if m == 'AgentBiDA' else f"{oa_m:.2f}$\\pm${oa_s:.2f}")
-                vals_aa.append(f"\\textbf{{{aa_m:.2f}}}$\\pm${aa_s:.2f}" if m == 'AgentBiDA' else f"{aa_m:.2f}$\\pm${aa_s:.2f}")
-                vals_ka.append(f"\\textbf{{{ka_m:.2f}}}$\\pm${ka_s:.2f}" if m == 'AgentBiDA' else f"{ka_m:.2f}$\\pm${ka_s:.2f}")
+                vals_oa.append(f"\\textbf{{{oa_m:.2f}}}$\\pm${oa_s:.2f}" if m == 'SelfAttnAgentBiDA' else f"{oa_m:.2f}$\\pm${oa_s:.2f}")
+                vals_aa.append(f"\\textbf{{{aa_m:.2f}}}$\\pm${aa_s:.2f}" if m == 'SelfAttnAgentBiDA' else f"{aa_m:.2f}$\\pm${aa_s:.2f}")
+                vals_ka.append(f"\\textbf{{{ka_m:.2f}}}$\\pm${ka_s:.2f}" if m == 'SelfAttnAgentBiDA' else f"{ka_m:.2f}$\\pm${ka_s:.2f}")
             else:
-                vals_oa.append(f"\\textbf{{{oa_m:.2f}}}" if m == 'AgentBiDA' else f"{oa_m:.2f}")
-                vals_aa.append(f"\\textbf{{{aa_m:.2f}}}" if m == 'AgentBiDA' else f"{aa_m:.2f}")
-                vals_ka.append(f"\\textbf{{{ka_m:.2f}}}" if m == 'AgentBiDA' else f"{ka_m:.2f}")
+                vals_oa.append(f"\\textbf{{{oa_m:.2f}}}" if m == 'SelfAttnAgentBiDA' else f"{oa_m:.2f}")
+                vals_aa.append(f"\\textbf{{{aa_m:.2f}}}" if m == 'SelfAttnAgentBiDA' else f"{aa_m:.2f}")
+                vals_ka.append(f"\\textbf{{{ka_m:.2f}}}" if m == 'SelfAttnAgentBiDA' else f"{ka_m:.2f}")
             
         f.write(row_oa + "\n")
         f.write(row_aa + "\n")
@@ -331,7 +332,7 @@ def run_experiment(opts):
         l.write("\\end{table*}\n")
 
     # Generate the combined classification map figure
-    if successful_models:
+    if successful_models and not opts.no_vis:
         print("Generating combined classification map figure...")
         num_plots = len(successful_models) + 1
         fig, axes = plt.subplots(1, num_plots, figsize=(2 * num_plots, 8))
@@ -388,6 +389,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_heads', type=int, default=8)
     parser.add_argument('--seeds', type=int, nargs='+', default=[2100, 2101, 2102, 2103, 2104], help='List of random seeds to run')
     parser.add_argument('--output_dir', type=str, default='./paper_visualizations')
+    parser.add_argument('--no_vis', action='store_true', help='Skip generating PNG visualizations to save time')
 
     opts = parser.parse_args()
     run_experiment(opts)
