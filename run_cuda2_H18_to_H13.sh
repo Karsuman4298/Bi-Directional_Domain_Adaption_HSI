@@ -12,7 +12,7 @@ NUM_AGENTS=5
 NUM_HEADS=8
 
 # Models to evaluate
-MODELS="GAHT cnn3d ablstm dffn m3ddcnn rssan speformer ssftt BiDA AgentBiDA SelfAttnAgentBiDA"
+MODELS="SelfAttnAgentBiDA AgentBiDA BiDA GAHT cnn3d ablstm dffn m3ddcnn rssan speformer ssftt"
 
 echo "========================================================="
 echo " RUN 1: Houston18 (Source) -> Houston13 (Target) on CUDA 0"
