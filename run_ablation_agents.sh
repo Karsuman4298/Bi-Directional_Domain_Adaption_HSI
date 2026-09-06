@@ -44,7 +44,7 @@ for NUM_AGENTS in "${AGENTS[@]}"; do
     # Run across all seeds
     for SEED in "${SEEDS[@]}"; do
         # Run the training script and capture the output
-        OUTPUT=$(python3 train_self_attn_agent_bida.py \
+        OUTPUT=$(python3 train_agent_bida.py \
             --source_name $SOURCE \
             --target_name $TARGET \
             --epoch $EPOCHS \
