@@ -40,12 +40,6 @@ for SEED in $SEEDS; do
     python3 train_agent_bida.py --source_name $SOURCE --target_name $TARGET \
         --epoch $EPOCHS --bs $BATCH_SIZE --patch_size $PATCH_SIZE --depth $DEPTH \
         --num_agents $NUM_AGENTS --num_heads $NUM_HEADS --seed $SEED
-        
-    # Optional 4: Train GatedAgentBiDA (commented out by default, uncomment to include)
-    # echo "--> Training GatedAgentBiDA (Seed $SEED)"
-    # python3 train_gated_agent_bida.py --source_name $SOURCE --target_name $TARGET \
-    #     --epoch $EPOCHS --bs $BATCH_SIZE --patch_size $PATCH_SIZE --depth $DEPTH \
-    #     --num_agents $NUM_AGENTS --num_heads $NUM_HEADS --gate_hidden_ratio 0.25 --gate_init_bias 0.0 --seed $SEED
 
 done
 

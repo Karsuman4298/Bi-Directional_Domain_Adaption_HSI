@@ -2,3 +2,12 @@ __pycache__
 checkpoints
 paper_visualizations*/
 inference_outputs/
+
+# Large zip files
+*.zip
+
+# PDF outputs
+*.pdf
+
+# PNG outputs
+*.png
