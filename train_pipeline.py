@@ -19,7 +19,22 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
     
     for e in tqdm(range(1, opts.epoch+1), desc="training the network"):
         network.train()
-        for batch_idx, (data_src, data_tar) in enumerate(zip(train_loader, test_loader_noise)):
+        iter_src = iter(train_loader)
+        iter_tar = iter(test_loader_noise)
+        num_batches = max(len(train_loader), len(test_loader_noise))
+        
+        for batch_idx in range(num_batches):
+            try:
+                data_src = next(iter_src)
+            except StopIteration:
+                iter_src = iter(train_loader)
+                data_src = next(iter_src)
+                
+            try:
+                data_tar = next(iter_tar)
+            except StopIteration:
+                iter_tar = iter(test_loader_noise)
+                data_tar = next(iter_tar)
 
             images, targets = data_src
             images_tar, targets_tar = data_tar
@@ -40,7 +55,7 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                 if e > 100 and opts.bs == images.shape[0] and opts.bs == images_tar.shape[0]:
                     Align_loss = (MMD_criterion(
                         out_x, out_x_tar) + MMD_criterion(
-                        out_x_fusion_src, out_x_fusion_src))/2
+                        out_x_fusion_src, out_x_fusion))/2
                     loss = loss_cls + opts.lambda1*Align_loss + opts.lambda1*(loss_dis + loss_dis_src) + opts.lambda2*(loss_con_tar + loss_con_src)
 
                     Align_losses.append(Align_loss.item())
