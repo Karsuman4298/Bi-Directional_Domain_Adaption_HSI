@@ -300,8 +300,8 @@ def run_experiment(opts):
         vals_ka = []
         
         for m in successful_models:
-            oa_m = np.mean(model_results[m]['oa']) * 100
-            oa_s = np.std(model_results[m]['oa']) * 100
+            oa_m = np.mean(model_results[m]['oa'])
+            oa_s = np.std(model_results[m]['oa'])
             aa_m = np.mean(model_results[m]['aa'])
             aa_s = np.std(model_results[m]['aa'])
             ka_m = np.mean(model_results[m]['kappa']) * 100
