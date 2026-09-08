@@ -75,14 +75,21 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                 A_mean_losses = np.mean(Align_losses)
             else:
                 A_mean_losses = 0
-            A_mean_Distill_losses = np.mean(Distill_losses)
+            if Distill_losses:
+                A_mean_Distill_losses = np.mean(Distill_losses)
+            else:
+                A_mean_Distill_losses = 0
             train_info = "train at epoch {}/{}, loss={:.6f}, Align_loss={:.6f}, Distill_loss={:.6f}"
             train_info = train_info.format(
                 e, opts.epoch,  mean_losses, A_mean_losses, A_mean_Distill_losses)
             tqdm.write(train_info)
             losses = []
+            Align_losses = []
+            Distill_losses = []
         else:
             losses = []
+            Align_losses = []
+            Distill_losses = []
 
         if scheduler is not None:
             scheduler.step()

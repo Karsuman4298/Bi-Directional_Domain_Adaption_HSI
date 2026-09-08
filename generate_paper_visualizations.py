@@ -97,44 +97,74 @@ def run_experiment(opts):
             # Initialize Models
             model = get_model(model_name, opts.target_name, opts.patch_size, opts).to(device)
             
-            if is_bida:
-                model_ema = get_model(model_name, opts.target_name, opts.patch_size, opts, ema=True).to(device)
-            else:
-                model_ema = None
-                
-            optimizer, scheduler = load_scheduler(model_name, model, opts)
-            
-            if is_bida:
-                criterion, _ = make_loss(opts, num_classes=num_classes, device=device)
-            else:
-                criterion = torch.nn.CrossEntropyLoss()
-            
             # Override opts seed for this iteration
             opts.seed = seed
             
-            checkpoint_dir = os.path.join(opts.output_dir, f'{model_name}_checkpoints_seed_{seed}')
-            os.makedirs(checkpoint_dir, exist_ok=True)
+            # Try to find existing checkpoints from dedicated training scripts
+            existing_checkpoint = None
+            search_dirs = []
             
-            # Train
-            if is_bida:
-                train(model, model_ema, optimizer, criterion, num_classes, 
-                      train_loader, val_loader, test_loader_noise, test_loader, 
-                      opts, checkpoint_dir, device, scheduler)
+            if model_name == 'AgentBiDA':
+                search_dirs.append(f"./checkpoints/agent_bida/{opts.source_name}to{opts.target_name}_agents{opts.num_agents}_heads{opts.num_heads}")
+            elif model_name == 'SelfAttnAgentBiDA':
+                search_dirs.append(f"./checkpoints/self_attn_agent_bida/{opts.source_name}to{opts.target_name}_agents{opts.num_agents}_heads{opts.num_heads}")
+            elif model_name in ['BiDA', 'BiDA_Agent']:
+                search_dirs.append(f"./checkpoints/{model_name}/{opts.source_name}to{opts.target_name}")
             else:
-                train_standard(model, optimizer, criterion, num_classes,
-                               train_loader, test_loader, opts, checkpoint_dir, device, scheduler)
-                  
-            # Find best checkpoint for this seed
-            model_files = [f for f in os.listdir(checkpoint_dir) if f.startswith('model_ts_best') and f.endswith('.pth')]
-            if not model_files:
-                print(f"Warning: No checkpoint found for {model_name} seed {seed}!")
-                continue
-                
-            best_model_file = sorted(model_files, key=lambda x: os.path.getmtime(os.path.join(checkpoint_dir, x)))[-1]
-            checkpoint_path = os.path.join(checkpoint_dir, best_model_file)
+                search_dirs.append(f"./checkpoints/{model_name}/{opts.source_name}to{opts.target_name}")
             
-            print(f"Loading best checkpoint for inference: {best_model_file}")
-            model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+            # Also check the output_dir from previous runs of this script
+            search_dirs.append(os.path.join(opts.output_dir, f'{model_name}_checkpoints_seed_{seed}'))
+            
+            for search_dir in search_dirs:
+                if os.path.isdir(search_dir):
+                    model_files = [f for f in os.listdir(search_dir) if f.startswith('model_ts_best') and f.endswith('.pth') and str(seed) in f]
+                    if model_files:
+                        best_file = sorted(model_files, key=lambda x: os.path.getmtime(os.path.join(search_dir, x)))[-1]
+                        existing_checkpoint = os.path.join(search_dir, best_file)
+                        print(f"Found existing checkpoint: {existing_checkpoint}")
+                        break
+            
+            if existing_checkpoint:
+                print(f"Loading pre-trained checkpoint (skipping training): {existing_checkpoint}")
+                model.load_state_dict(torch.load(existing_checkpoint, map_location=device))
+            else:
+                print(f"No existing checkpoint found. Training {model_name} from scratch...")
+                if is_bida:
+                    model_ema = get_model(model_name, opts.target_name, opts.patch_size, opts, ema=True).to(device)
+                else:
+                    model_ema = None
+                    
+                optimizer, scheduler = load_scheduler(model_name, model, opts)
+                
+                if is_bida:
+                    criterion, _ = make_loss(opts, num_classes=num_classes, device=device)
+                else:
+                    criterion = torch.nn.CrossEntropyLoss()
+                
+                checkpoint_dir = os.path.join(opts.output_dir, f'{model_name}_checkpoints_seed_{seed}')
+                os.makedirs(checkpoint_dir, exist_ok=True)
+                
+                if is_bida:
+                    train(model, model_ema, optimizer, criterion, num_classes, 
+                          train_loader, val_loader, test_loader_noise, test_loader, 
+                          opts, checkpoint_dir, device, scheduler)
+                else:
+                    train_standard(model, optimizer, criterion, num_classes,
+                                   train_loader, test_loader, opts, checkpoint_dir, device, scheduler)
+                
+                # Find best checkpoint for this seed
+                model_files = [f for f in os.listdir(checkpoint_dir) if f.startswith('model_ts_best') and f.endswith('.pth')]
+                if not model_files:
+                    print(f"Warning: No checkpoint found for {model_name} seed {seed}!")
+                    continue
+                    
+                best_model_file = sorted(model_files, key=lambda x: os.path.getmtime(os.path.join(checkpoint_dir, x)))[-1]
+                checkpoint_path = os.path.join(checkpoint_dir, best_model_file)
+                
+                print(f"Loading best checkpoint for inference: {best_model_file}")
+                model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+            
             model.eval()
             
             # Full Image Inference
@@ -385,7 +415,7 @@ if __name__ == '__main__':
     parser.add_argument("--lambda2", type=float, default=1e+0)
     parser.add_argument("--log_interval", type=float, default=10)
     parser.add_argument('--re_ratio', type=int, default=1)
-    parser.add_argument('--num_agents', type=int, default=4)
+    parser.add_argument('--num_agents', type=int, default=5)
     parser.add_argument('--num_heads', type=int, default=8)
     parser.add_argument('--seeds', type=int, nargs='+', default=[2100, 2101, 2102, 2103, 2104], help='List of random seeds to run')
     parser.add_argument('--output_dir', type=str, default='./paper_visualizations')
