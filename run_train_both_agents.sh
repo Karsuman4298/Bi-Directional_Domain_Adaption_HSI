@@ -46,7 +46,7 @@ python3 generate_paper_visualizations.py \
     --models SelfAttnAgentBiDA AgentBiDA \
     --epoch $EPOCHS --bs $BATCH_SIZE --patch_size $PATCH_SIZE \
     --depth $DEPTH --num_agents $NUM_AGENTS --num_heads $NUM_HEADS \
-    --seeds "$SEEDS" --device 0 --no_vis
+    --seeds $SEEDS --device 0 --no_vis
 
 # ---------------------------------------------------------------------------------
 # Direction 2: Houston18 -> Houston13
@@ -82,7 +82,7 @@ python3 generate_paper_visualizations.py \
     --models SelfAttnAgentBiDA AgentBiDA \
     --epoch $EPOCHS --bs $BATCH_SIZE --patch_size $PATCH_SIZE \
     --depth $DEPTH --num_agents $NUM_AGENTS --num_heads $NUM_HEADS \
-    --seeds "$SEEDS" --device 0 --no_vis
+    --seeds $SEEDS --device 0 --no_vis
 
 echo ""
 echo "=========================================================================="

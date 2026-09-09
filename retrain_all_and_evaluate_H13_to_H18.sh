@@ -61,7 +61,7 @@ python3 generate_paper_visualizations.py \
     --depth $DEPTH \
     --num_agents $NUM_AGENTS \
     --num_heads $NUM_HEADS \
-    --seeds "$SEEDS" \
+    --seeds $SEEDS \
     --device 0 \
     --no_vis
 
