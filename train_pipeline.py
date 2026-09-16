@@ -103,6 +103,18 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                 save_ts_checkpoint(network, is_best, saving_path,
                                 epoch=e, acc=best_test_acc, tmp_acc=ts_acc, seed=opts.seed)
 
+                import json
+                res_dict = {
+                    'OA': float(results['Accuracy'] * 100),
+                    'AA': float(np.mean(results['TPR']) * 100),
+                    'Kappa': float(results['Kappa'] * 100),
+                    'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
+                }
+                os.makedirs('ablation_results', exist_ok=True)
+                json_path = os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json")
+                with open(json_path, 'w') as f:
+                    json.dump(res_dict, f, indent=4)
+
                 io.savemat(os.path.join(saving_path,
                                         'results' + f'_{best_test_acc:.4f}_{opts.seed}' +'.mat'),
                             {'lr': opts.lr, 'lambda1': opts.lambda1, 'depth': opts.depth, 're_ratio':opts.re_ratio, 'results': results, 
@@ -271,6 +283,18 @@ def train_standard(network, optimizer, criterion, num_classes, train_loader, val
                 best_test_acc = max(ts_acc, best_test_acc)
                 save_ts_checkpoint(network, is_best, saving_path,
                                 epoch=e, acc=best_test_acc, tmp_acc=ts_acc, seed=opts.seed)
+
+                import json
+                res_dict = {
+                    'OA': float(results['Accuracy'] * 100),
+                    'AA': float(np.mean(results['TPR']) * 100),
+                    'Kappa': float(results['Kappa'] * 100),
+                    'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
+                }
+                os.makedirs('ablation_results', exist_ok=True)
+                json_path = os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json")
+                with open(json_path, 'w') as f:
+                    json.dump(res_dict, f, indent=4)
 
                 io.savemat(os.path.join(saving_path,
                                         'results' + f'_{best_test_acc:.4f}_{opts.seed}' +'.mat'),
