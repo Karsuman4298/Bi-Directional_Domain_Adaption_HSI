@@ -27,6 +27,9 @@ torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.enabled = True
 
+import os
+os.makedirs('./logs', exist_ok=True)
+
 f = open("./logs/train_logs.txt", 'w')
 f.write("Training loss logs:")
 f.write("\n")

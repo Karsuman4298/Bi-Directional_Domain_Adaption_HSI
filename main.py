@@ -27,6 +27,8 @@ if __name__ == "__main__":
                         help='ema variable decay rate (default: 0.999)')
     parser.add_argument("--dim", type=int, default=64)
     parser.add_argument("--depth", type=int, default=3)
+    parser.add_argument("--num_heads", type=int, default=4)
+    parser.add_argument("--num_agents", type=int, default=4)
     parser.add_argument("--num_tokens", type=int, default=4)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--loss_type", type=str,
@@ -122,7 +124,7 @@ if __name__ == "__main__":
 
     from train_pipeline import train_standard
     try:
-        if opts.model in ['BiDA', 'AgentBiDA', 'BiDA_Agent']:
+        if opts.model in ['BiDA', 'AgentBiDA', 'BiDA_Agent','SelfAttnAgentBiDA']:
             train(model, model_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, model_dir, device, scheduler)
         else:
             # Standard single-domain training pipeline for baselines like cnn3d, dffn, etc.

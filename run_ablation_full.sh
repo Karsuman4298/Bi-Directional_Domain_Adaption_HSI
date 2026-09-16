@@ -27,22 +27,28 @@ for EXT in "${EXTERNAL_METHODS[@]}"; do
         echo "Running External Model: $EXT | Seed: $SEED"
         echo "============================================="
         
-        pushd external_methods/$EXT
+        pushd external_methods/$EXT > /dev/null
         
-        # Discover the training script for this external method
-        TRAIN_SCRIPT=$(ls train*.py 2>/dev/null | head -n 1)
-        if [ -z "$TRAIN_SCRIPT" ]; then
-             TRAIN_SCRIPT=$(ls *main*.py 2>/dev/null | head -n 1)
-        fi
+        # Explicit mapping for known entry points
+        TRAIN_SCRIPT=""
+        case "$EXT" in
+            "PCADA") TRAIN_SCRIPT="train_pcada_houston.py" ;;
+            "TSTnet") TRAIN_SCRIPT="train_tstnet.py" ;;
+            "MDGTnet") TRAIN_SCRIPT="train_H1318_com_cls.py" ;;
+            "CLDA") TRAIN_SCRIPT="CLDA_HOUSTON13_2_18.py" ;;
+            "SCLUDA") TRAIN_SCRIPT="SCLUDA_Houston.py" ;;
+            "SSWADA") TRAIN_SCRIPT="main.py" ;;
+            "CACL") TRAIN_SCRIPT="demo_multiDA.py" ;;
+            "MLUDA") TRAIN_SCRIPT="MLUDA_hu.py" ;;
+        esac
         
-        # Execute the script
-        if [ -n "$TRAIN_SCRIPT" ]; then
-            python $TRAIN_SCRIPT --seed $SEED
+        if [ -n "$TRAIN_SCRIPT" ] && [ -f "$TRAIN_SCRIPT" ]; then
+            python "$TRAIN_SCRIPT" --seed $SEED
         else
-            echo "Warning: No training script found for $EXT"
+            echo "Warning: No training script found for $EXT ($TRAIN_SCRIPT)"
         fi
         
-        popd
+        popd > /dev/null
     done
 done
 

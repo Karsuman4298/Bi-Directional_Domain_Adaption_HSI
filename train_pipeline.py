@@ -105,7 +105,7 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
 
                 import json
                 res_dict = {
-                    'OA': float(results['Accuracy'] * 100),
+                    'OA': float(results['Accuracy']),
                     'AA': float(np.mean(results['TPR']) * 100),
                     'Kappa': float(results['Kappa'] * 100),
                     'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
@@ -286,7 +286,7 @@ def train_standard(network, optimizer, criterion, num_classes, train_loader, val
 
                 import json
                 res_dict = {
-                    'OA': float(results['Accuracy'] * 100),
+                    'OA': float(results['Accuracy']),
                     'AA': float(np.mean(results['TPR']) * 100),
                     'Kappa': float(results['Kappa'] * 100),
                     'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
