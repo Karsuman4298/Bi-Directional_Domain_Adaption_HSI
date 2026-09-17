@@ -1,7 +1,3 @@
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument('--seed', type=int, default=678)
-args = parser.parse_args()
 from __future__ import print_function
 import argparse
 import math
@@ -27,6 +23,7 @@ from collections import Counter
 warnings.filterwarnings('ignore')
 
 parser = argparse.ArgumentParser(description='CLDA HSI Classification')
+parser.add_argument('--seed', type=int, default=678, help='random seed')
 parser.add_argument('--batch-size', type=int, default=36, metavar='N',
                     help='input batch size for training (default: 36)')
 parser.add_argument('--epochs', type=int, default=100, metavar='N',

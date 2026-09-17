@@ -2,13 +2,56 @@
 @author: Junguang Jiang
 @contact: JiangJunguang1123@outlook.com
 """
-from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Optional
 
-from modules.grl import WarmStartGradientReverseLayer
-from common.utils.metric import binary_accuracy
+
+# Inlined from missing 'modules.grl' package
+class WarmStartGradientReverseLayer(nn.Module):
+    def __init__(self, alpha=1., lo=0., hi=1., max_iters=1000, auto_step=True):
+        super(WarmStartGradientReverseLayer, self).__init__()
+        self.alpha = alpha
+        self.lo = lo
+        self.hi = hi
+        self.iter_num = 0
+        self.max_iters = max_iters
+        self.auto_step = auto_step
+
+    def forward(self, input):
+        coeff = self._calc_coeff()
+        if self.auto_step:
+            self.step()
+        return GradientReverseFunction.apply(input, coeff)
+
+    def _calc_coeff(self):
+        return float(2.0 * (self.hi - self.lo) / (1.0 + torch.exp(torch.tensor(
+            -self.alpha * self.iter_num / self.max_iters))) - (self.hi - self.lo) + self.lo)
+
+    def step(self):
+        self.iter_num += 1
+
+
+class GradientReverseFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, coeff=1.0):
+        ctx.coeff = coeff
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.neg() * ctx.coeff, None
+
+
+# Inlined from missing 'common.utils.metric' package
+def binary_accuracy(output: torch.Tensor, target: torch.Tensor) -> float:
+    with torch.no_grad():
+        batch_size = target.size(0)
+        pred = (output >= 0.5).float()
+        correct = pred.eq(target).sum()
+        return correct.item() / batch_size
+
 
 __all__ = ['DomainAdversarialLoss']
 

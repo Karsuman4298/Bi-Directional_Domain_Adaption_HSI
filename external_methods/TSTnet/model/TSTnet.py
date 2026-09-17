@@ -5,7 +5,8 @@ from torch_geometric.nn import SAGEConv
 from OT_torch_ import cost_matrix_batch_torch, GW_distance_uniform, IPOT_distance_torch_batch_uniform
 import math
 from torch_geometric.data import Data
-from train import DEVICE
+import torch
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import numpy as np
 
 def getGraphdata(source_share, bs, target_share, target=True):
