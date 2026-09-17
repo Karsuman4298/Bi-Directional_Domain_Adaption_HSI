@@ -44,7 +44,7 @@ for EXT in "${EXTERNAL_METHODS[@]}"; do
         case "$EXT" in
             "PCADA")    python train_pcada_houston.py --seed $SEED ;;
             "TSTnet")   python train_tstnet.py --seed $SEED ;;
-            "MDGTnet")  python train_H1318_com_cls.py --seed $SEED ;;
+            "MDGTnet")  python train_mdgtnet_houston.py --seed $SEED --source_name Houston13 --target_name Houston18 --data_dir ../../Houston/ ;;
             "CLDA")     python CLDA_HOUSTON13_2_18.py --seed $SEED ;;
             "SCLUDA")   python SCLUDA_Houston.py --seed $SEED ;;
             "SSWADA")   python main.py --seed $SEED ;;
