@@ -295,7 +295,7 @@ for iDataSet in range(nDataSet):
             acc[iDataSet] = 100. * total_rewards / len(test_loader.dataset)
             OA = acc
             C = metrics.confusion_matrix(labels, predict)
-            A[iDataSet, :] = np.diag(C) / np.sum(C, 1, dtype=np.float)
+            A[iDataSet, :] = np.diag(C) / np.sum(C, 1, dtype=float)
 
             k[iDataSet] = metrics.cohen_kappa_score(labels, predict)
             print('\t\tAccuracy: {}/{} ({:.2f}%)\n'.format(total_rewards, len(test_loader.dataset),

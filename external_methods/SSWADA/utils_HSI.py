@@ -304,7 +304,7 @@ def metrics(prediction, target, ignored_labels=[], n_classes=None):
     Returns:
         accuracy, F1 score by class, confusion matrix
     """
-    ignored_mask = np.zeros(target.shape[:2], dtype=np.bool)
+    ignored_mask = np.zeros(target.shape[:2], dtype=bool)
     for l in ignored_labels:
         ignored_mask[target == l] = True
     ignored_mask = ~ignored_mask

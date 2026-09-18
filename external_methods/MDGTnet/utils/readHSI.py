@@ -33,9 +33,9 @@ def readHSI(path, image_name, label_name, mode, img_order):
     image = np.array(image)
     if label_name is not None:
         label = np.array(label)
-    image = image.astype(np.float)
+    image = image.astype(float)
     if label_name is not None:
-        label = label.astype(np.float)
+        label = label.astype(float)
 
     image = torch.from_numpy(image)
     if label_name is not None:

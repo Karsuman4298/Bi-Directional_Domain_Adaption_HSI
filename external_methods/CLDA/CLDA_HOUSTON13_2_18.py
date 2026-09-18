@@ -307,7 +307,7 @@ def test(data_loader):
     acc[iDataSet] = 100. * float(correct_add) / size
     OA = acc
     C = metrics.confusion_matrix(test_all, test_pred_all)
-    A[iDataSet, :] = np.diag(C) / np.sum(C, 1, dtype=np.float)
+    A[iDataSet, :] = np.diag(C) / np.sum(C, 1, dtype=float)
 
     k[iDataSet] = metrics.cohen_kappa_score(test_all, test_pred_all)
 

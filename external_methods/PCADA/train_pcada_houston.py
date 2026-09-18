@@ -445,6 +445,10 @@ for iDataSet in range(nDataSet):
                                   loader_s_no_shuffle, unlabeled_loader_t, args.rho, args.lambda_, args.gamma)
 
     test_acc = test(test_loader)
+    
+    import os
+    os.makedirs('checkpoints/houston', exist_ok=True)
+    
     torch.save(feature_extractor.state_dict(),
                'checkpoints/houston/' + str(seeds[iDataSet])
                + '_g.pth')
