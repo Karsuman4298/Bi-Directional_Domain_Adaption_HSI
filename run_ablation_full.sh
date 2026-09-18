@@ -11,14 +11,14 @@
 SEEDS=(678 681 774 789)
 SOURCE="Houston13"
 TARGET="Houston18"
-INTERNAL_MODELS=("GAHT" "BiDA" "AgentBiDA" "SelfAttentionAgentBiDA")
+INTERNAL_MODELS=("SelfAttentionAgentBiDA")
 EXTERNAL_METHODS=("PCADA" "TSTnet" "MDGTnet" "CLDA" "SCLUDA" "SSWADA" "CACL" "MLUDA")
 
 echo "Starting Ablation Study ($SOURCE -> $TARGET)..."
 
 # Clear stale JSON results to avoid using old buggy cached values
 echo "Clearing old result cache..."
-rm -f ablation_results/*.json
+# rm -f ablation_results/*.json
 mkdir -p ablation_results
 
 # 1. Run Internal Models
