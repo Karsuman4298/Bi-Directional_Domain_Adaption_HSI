@@ -313,6 +313,7 @@ for epoch in range(num_epoch):
         loop.set_postfix(loss=f'{batch_loss.item():.4f}', oa_src=f'{oa_1:.3f}', oa_tgt=f'{oa_2:.3f}')
 
     train_loss_list.append(train_loss)
+    os.makedirs('./models/MDGTnet_H1318', exist_ok=True)
     torch.save(model.state_dict(), f'./models/MDGTnet_H1318/model{epoch}.pth')
     print(f'[{epoch+1:03d}/{num_epoch}] {time.time()-epoch_start:.1f}s  Loss: {train_loss:.4f}')
 

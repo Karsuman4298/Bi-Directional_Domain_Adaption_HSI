@@ -277,6 +277,7 @@ if __name__ == '__main__':
                         acc_test_list[flag] = acc
                         results = metrics(np.concatenate(pred), np.concatenate(label), ignored_labels=hyperparams['ignored_labels'], n_classes=gt_src.max())
                         print(classification_report(np.concatenate(pred),np.concatenate(label),target_names=LABEL_VALUES_tar))
+                        os.makedirs(args.save_path, exist_ok=True)
                         model_save_path = os.path.join(args.save_path, 'TSTnet_params_'+args.source_name+'_'+str(int(acc*100))+'.pkl')
                         torch.save(model_TST.state_dict(), model_save_path)
 

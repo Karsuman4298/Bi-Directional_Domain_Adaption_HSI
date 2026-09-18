@@ -382,6 +382,8 @@ for iDataSet in range(nDataSet):
         best_test_acc = test_accuracy
         best_predict_all = predict
         best_G, best_RandPerm, best_Row, best_Column = G_test, RandPerm, Row, Column
+    import os
+    os.makedirs('checkpoints/houston', exist_ok=True)
     torch.save({'netG':G.state_dict(),'F1':F1.state_dict(),'F2':F2.state_dict()},'checkpoints/houston/model_test'+str(iDataSet)+str(test_accuracy)+'.pt')
 
 print(acc)
