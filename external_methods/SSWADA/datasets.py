@@ -253,6 +253,24 @@ def get_dataset(dataset_name, target_folder="./", datasets=DATASETS_CONFIG):
         label_values = ['Water','Land/Building','Plant']
 
         ignored_labels = [0]
+    elif dataset_name == 'Houston13':
+        import h5py, numpy as _np
+        with h5py.File(folder + 'Houston13.mat', 'r') as _f:
+            img = _np.array(_f['ori_data']).T.astype(_np.float32)  # [H,W,C]
+        with h5py.File(folder + 'Houston13_7gt.mat', 'r') as _f:
+            gt = _np.array(_f['map']).T.astype(_np.int64)
+        rgb_bands = (30, 20, 10)
+        label_values = ['Healthy grass','Stressed grass','Trees','Water','Residential','Commercial','Road']
+        ignored_labels = [0]
+    elif dataset_name == 'Houston18':
+        import h5py, numpy as _np
+        with h5py.File(folder + 'Houston18.mat', 'r') as _f:
+            img = _np.array(_f['ori_data']).T.astype(_np.float32)  # [H,W,C]
+        with h5py.File(folder + 'Houston18_7gt.mat', 'r') as _f:
+            gt = _np.array(_f['map']).T.astype(_np.int64)
+        rgb_bands = (30, 20, 10)
+        label_values = ['Healthy grass','Stressed grass','Trees','Water','Residential','Commercial','Road']
+        ignored_labels = [0]
     elif dataset_name == 'Dioni':
         # Load the image
         img = open_file(folder + 'Dioni.mat')['ori_data'][:, :, :144]

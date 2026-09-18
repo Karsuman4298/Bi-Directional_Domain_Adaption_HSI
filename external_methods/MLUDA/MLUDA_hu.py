@@ -26,10 +26,10 @@ from sklearn import svm
 from UtilsCMS import *
 
 ##################################
-data_path_s = './datasets/Houston/Houston13.mat'
-label_path_s = './datasets/Houston/Houston13_7gt.mat'
-data_path_t = './datasets/Houston/Houston18.mat'
-label_path_t = './datasets/Houston/Houston18_7gt.mat'
+data_path_s = '../../Houston/Houston13.mat'
+label_path_s = '../../Houston/Houston13_7gt.mat'
+data_path_t = '../../Houston/Houston18.mat'
+label_path_t = '../../Houston/Houston18_7gt.mat'
 
 data_s,label_s = utils.load_data_houston(data_path_s,label_path_s)
 data_t,label_t = utils.load_data_houston(data_path_t,label_path_t)

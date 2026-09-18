@@ -22,11 +22,12 @@ def load_data_pavia(image_file, label_file):
 
 
 def load_data_houston(image_file, label_file):
-    image_data = sio.loadmat(image_file)
-    label_data = sio.loadmat(label_file)
-
-    data_all = image_data['ori_data']
-    GroundTruth = label_data['map']
+    # Houston .mat files are MATLAB v7.3 (HDF5 format) — use h5py
+    import h5py
+    with h5py.File(image_file, 'r') as f:
+        data_all = np.array(f['ori_data']).T  # h5py transposes: restore [H,W,C]
+    with h5py.File(label_file, 'r') as f:
+        GroundTruth = np.array(f['map']).T.astype(np.int64)
 
     data = data_all.reshape(np.prod(data_all.shape[:2]), np.prod(data_all.shape[2:]))
     data_scaler = preprocessing.scale(data)

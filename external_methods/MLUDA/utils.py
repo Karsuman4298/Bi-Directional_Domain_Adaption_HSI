@@ -61,28 +61,16 @@ def cubeData(file_path):
     return Data_Band_Scaler_s,Data_Band_Scaler_t, gt1,gt2  # image:(512,217,3),label:(512,217)
 
 def load_data_houston(image_file, label_file):
-    image_data = hdf5storage.loadmat(image_file)
-    label_data = hdf5storage.loadmat(label_file)
-    # print(image_data.keys()) #mine
-    # print(label_data.keys())
+    # Houston .mat files are MATLAB v7.3 (HDF5) — use h5py directly
+    import h5py
+    with h5py.File(image_file, 'r') as f:
+        data_all = np.array(f['ori_data']).T   # h5py transposes → restore [H,W,C]
+    with h5py.File(label_file, 'r') as f:
+        GroundTruth = np.array(f['map']).T.astype(np.int64)
 
-    data_all = image_data['ori_data']
-
-    GroundTruth = label_data['map']
-
-    Data_Band_Scaler = data_all
-
-
-    # # 归一化
-    # data = data.astype(np.float32)  # 半精度浮点：1位符号，5位指数，10位尾数
-    # data_all = 1 * ((data_all - np.min(data_all)) / (np.max(data_all) - np.min(data_all)) - 0.5)
-
-    # data = data_all.reshape(np.prod(data_all.shape[:2]), np.prod(data_all.shape[2:]))  # (111104,204)
-    # data_scaler = preprocessing.scale(data)  # 标准化 (X-X_mean)/X_std,
-    # Data_Band_Scaler = data_scaler.reshape(data_all.shape[0], data_all.shape[1], data_all.shape[2])
-
+    Data_Band_Scaler = data_all.astype(np.float32)
     print(np.max(Data_Band_Scaler), np.min(Data_Band_Scaler))
-    return Data_Band_Scaler, GroundTruth # image:(512,217,3),label:(512,217)
+    return Data_Band_Scaler, GroundTruth  # image:(H,W,C), label:(H,W)
 
 def load_data_hyrank(image_file, label_file):
     image_data = sio.loadmat(image_file)

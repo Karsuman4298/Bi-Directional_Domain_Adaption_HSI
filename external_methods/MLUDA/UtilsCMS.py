@@ -19,15 +19,10 @@ from torch.utils.data import TensorDataset, DataLoader
 from contrastive_loss import SupConLoss
 # from config_Houston import *
 from sklearn import svm
-import cv2
-import hdf5storage
-import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif'] = ['SimHei']
-# 自己加入的库
-from sklearn.decomposition import PCA
-from skimage import exposure
-import argparse
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None  # cv2 optional – guided filter will not be available
 
 def PlotColor(label):
     "将Label以热力图的形式进行可视化"

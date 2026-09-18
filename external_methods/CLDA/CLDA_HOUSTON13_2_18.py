@@ -67,10 +67,10 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 #load data
-data_path_s = './datasets/Houston/Houston13.mat'
-label_path_s = './datasets/Houston/Houston13_7gt.mat'
-data_path_t = './datasets/Houston/Houston18.mat'
-label_path_t = './datasets/Houston/Houston18_7gt.mat'
+data_path_s = '../../Houston/Houston13.mat'
+label_path_s = '../../Houston/Houston13_7gt.mat'
+data_path_t = '../../Houston/Houston18.mat'
+label_path_t = '../../Houston/Houston18_7gt.mat'
 
 source_data,source_label = load_data03(data_path_s,label_path_s)
 target_data,target_label = load_data03(data_path_t,label_path_t)

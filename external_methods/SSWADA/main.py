@@ -73,9 +73,9 @@ if __name__ == '__main__':
  for flag in range(args.num_trials):
     best_acc = 0
     acc_test_list, acc_maxval_test_list = np.zeros_like(args.lr), np.zeros_like(args.lr)
-    source_name = 'Hangzhou'
-    target_name = 'Shanghai'
-    FOLDER = 'E:/huang/PCDA230306/data/DataCube/'
+    source_name = 'Houston13'
+    target_name = 'Houston18'
+    FOLDER = '../../Houston/'
     result_dir = './Result_comparison/'
 
     img_src, gt_src, LABEL_VALUES_src, IGNORED_LABELS, RGB_BANDS, palette = get_dataset(source_name,

@@ -52,20 +52,17 @@ def cubeData(file_path):
     return Data_Band_Scaler_s,Data_Band_Scaler_t, gt1,gt2
 
 def load_data03(image_file, label_file):
-    image_data = sio.loadmat(image_file)
-    label_data = sio.loadmat(label_file)
+    # Houston .mat files are MATLAB v7.3 (HDF5) — must use h5py
+    import h5py
+    with h5py.File(image_file, 'r') as f:
+        data_all = np.array(f['ori_data']).T   # h5py stores transposed → restore [H,W,C]
+    with h5py.File(label_file, 'r') as f:
+        GroundTruth = np.array(f['map']).T.astype(np.int64)
 
-    # print(image_data.keys())
-    # print(label_data.keys())
-    data_all = image_data['ori_data']
-
-    GroundTruth = label_data['map']
-
-    data = data_all.reshape(np.prod(data_all.shape[:2]), np.prod(data_all.shape[2:]))  # (111104,204)
+    data = data_all.reshape(np.prod(data_all.shape[:2]), np.prod(data_all.shape[2:]))
     data_scaler = preprocessing.scale(data)
     Data_Band_Scaler = data_scaler.reshape(data_all.shape[0], data_all.shape[1], data_all.shape[2])
 
-    # Data_Band_Scaler = data_all
     return Data_Band_Scaler, GroundTruth
 
 def all_data(Data_Band_Scaler, GroundTruth,HalfWidth):

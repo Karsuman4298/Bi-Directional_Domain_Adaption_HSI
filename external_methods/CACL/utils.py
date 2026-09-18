@@ -53,31 +53,60 @@ MULTI_DATASETS_CONFIG = {
 
 
 def multi_data_loading(dataset_name, source_name, target_name, datasets=MULTI_DATASETS_CONFIG):
-    if dataset_name not in datasets.keys():
-        raise ValueError("{} dataset is unknown.".format(dataset_name))
-    dataset = datasets[dataset_name]
-    data_path = dataset['data_path']
-    src_data = dataset[source_name]
-    tar_data = dataset[target_name]
-    src_img1 = hdf5storage.loadmat(data_path + src_data['img1_name'] + '.mat')[src_data['img1_name']]
-    src_img2 = hdf5storage.loadmat(data_path + src_data['img2_name'] + '.mat')[src_data['img2_name']]
-    src_gt = hdf5storage.loadmat(data_path + src_data['gt_name'] + '.mat')[src_data['gt_name']]
-    tar_img1 = hdf5storage.loadmat(data_path + tar_data['img1_name'] + '.mat')[tar_data['img1_name']]
-    tar_img2 = hdf5storage.loadmat(data_path + tar_data['img2_name'] + '.mat')[tar_data['img2_name']]
-    tar_gt = hdf5storage.loadmat(data_path + tar_data['gt_name'] + '.mat')[tar_data['gt_name']]
+    # Houston .mat files are MATLAB v7.3 (HDF5) — must use h5py
+    import h5py
+    
+    # We only have HSI and GT in this repo (no LiDAR/DSM). 
+    # CACL expects two modalities, so we will pass the HSI data for both branches to let it run.
+    data_path = '../../Houston/'
+    
+    def load_houston(name):
+        img_path = data_path + name + '.mat'
+        gt_path = data_path + name + '_7gt.mat'
+        with h5py.File(img_path, 'r') as f:
+            img = np.array(f['ori_data']).T   # [H,W,C]
+        with h5py.File(gt_path, 'r') as f:
+            gt = np.array(f['map']).T.astype(np.int64)
+        return img, gt
+
+    src_img1, src_gt = load_houston(source_name)
+    src_img2 = src_img1.copy() # Duplicate HSI for second branch
+    
+    tar_img1, tar_gt = load_houston(target_name)
+    tar_img2 = tar_img1.copy() # Duplicate HSI for second branch
+    
     # Normalization
     [m1, n1, l1] = np.shape(src_img1)
     [m2, n2, _] = np.shape(tar_img1)
-    src_img1_2d = src_img1.reshape((m1 * n1, -1))  # 2D
-    src_img2_2d = src_img2.reshape((m1 * n1, -1))  # 2D
+    
+    # Need to match spectral dimensions if they differ (H13=144, H18=48)
+    # Just pad the smaller one to match the larger
+    l_max = max(l1, tar_img1.shape[2])
+    
+    def pad_bands(img, target_bands):
+        if img.shape[2] == target_bands: return img
+        out = np.zeros((img.shape[0], img.shape[1], target_bands), dtype=img.dtype)
+        out[:, :, :img.shape[2]] = img
+        return out
+        
+    src_img1 = pad_bands(src_img1, l_max)
+    src_img2 = pad_bands(src_img2, l_max)
+    tar_img1 = pad_bands(tar_img1, l_max)
+    tar_img2 = pad_bands(tar_img2, l_max)
+    
+    src_img1_2d = src_img1.reshape((m1 * n1, -1))
+    src_img2_2d = src_img2.reshape((m1 * n1, -1))
     tar_img1_2d = tar_img1.reshape((m2 * n2, -1))
     tar_img2_2d = tar_img2.reshape((m2 * n2, -1))
-    src_img1_2d = preprocessing.minmax_scale(src_img1_2d)  # Normalization
-    src_img2_2d = preprocessing.minmax_scale(src_img2_2d)  # Normalization
+    
+    src_img1_2d = preprocessing.minmax_scale(src_img1_2d)
+    src_img2_2d = preprocessing.minmax_scale(src_img2_2d)
     tar_img1_2d = preprocessing.minmax_scale(tar_img1_2d)
-    tar_img2_2d = preprocessing.minmax_scale(tar_img2_2d)  # Normalization
+    tar_img2_2d = preprocessing.minmax_scale(tar_img2_2d)
+    
     src_img1 = np.reshape(src_img1_2d, (m1, n1, -1))
     src_img2 = np.reshape(src_img2_2d, (m1, n1, -1))
+
     tar_img1 = np.reshape(tar_img1_2d, (m2, n2, -1))
     tar_img2 = np.reshape(tar_img2_2d, (m2, n2, -1))
     return src_img1, src_img2, src_gt, tar_img1, tar_img2, tar_gt, l1

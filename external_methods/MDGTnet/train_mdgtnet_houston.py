@@ -60,15 +60,16 @@ NUM_CLASSES = 7   # 7 shared classes between Houston13 and Houston18
 SLICE_SIZE  = args.patch_size
 
 # ─────────────────────── Data Loading ───────────────────────
-def load_mat_h5py(path):
-    """Load a MATLAB v7.3 .mat file using h5py. Returns (image [H,W,C], label [H,W])."""
-    with h5py.File(path, 'r') as f:
-        keys = list(f.keys())
-        # Image key: the largest array
-        img_key  = [k for k in keys if 'gt' not in k.lower() and 'map' not in k.lower()][0]
-        lbl_key  = [k for k in keys if 'gt' in k.lower() or 'map' in k.lower()][0]
-        img  = np.array(f[img_key]).astype(np.float32)   # h5py transposes: [C,W,H] or [C,H,W]
-        lbl  = np.array(f[lbl_key]).astype(np.int64)
+def load_mat_h5py(img_path, lbl_path):
+    """Load image and label from separate Houston v7.3 .mat files via h5py."""
+    with h5py.File(img_path, 'r') as f:
+        img = np.array(f['ori_data']).astype(np.float32)  # [C, W, H] in h5py
+        # h5py transposes MATLAB arrays → restore spatial dims: [C,W,H] → [H,W,C]
+        img = img.transpose(2, 1, 0)
+    with h5py.File(lbl_path, 'r') as f:
+        lbl = np.array(f['map']).astype(np.int64)         # [W, H] in h5py → [H, W]
+        if lbl.shape[0] < lbl.shape[1]:
+            lbl = lbl.T
     return img, lbl
 
 def normalize_image(img):
@@ -126,37 +127,25 @@ tgt_name = args.target_name
 data_dir = args.data_dir
 
 print(f"Loading {src_name} (source)...")
-src_img_raw, src_lbl = load_mat_h5py(os.path.join(data_dir, f'{src_name}.mat'))
-_,           src_lbl7 = load_mat_h5py(os.path.join(data_dir, f'{src_name}_7gt.mat'))
+src_img_raw, src_lbl7 = load_mat_h5py(
+    os.path.join(data_dir, f'{src_name}.mat'),
+    os.path.join(data_dir, f'{src_name}_7gt.mat')
+)
 
 print(f"Loading {tgt_name} (target)...")
-tgt_img_raw, tgt_lbl = load_mat_h5py(os.path.join(data_dir, f'{tgt_name}.mat'))
-_,           tgt_lbl7 = load_mat_h5py(os.path.join(data_dir, f'{tgt_name}_7gt.mat'))
+tgt_img_raw, tgt_lbl7 = load_mat_h5py(
+    os.path.join(data_dir, f'{tgt_name}.mat'),
+    os.path.join(data_dir, f'{tgt_name}_7gt.mat')
+)
 
-# h5py returns arrays transposed relative to scipy; handle both [C,H,W] and [H,W,C]
-# Ensure [C, H, W]
+# Data is now [H,W,C] for images, [H,W] for labels
+# Rearrange to [C,H,W] for processing
 def to_chw(arr):
-    if arr.ndim == 3:
-        # Heuristic: smallest dim is channels
-        idx = np.argmin(arr.shape)
-        if idx == 2:  # [H, W, C]
-            arr = arr.transpose(2, 0, 1)
-        elif idx == 0:  # already [C, H, W]
-            pass
-    return arr
+    """Convert [H,W,C] → [C,H,W]"""
+    return arr.transpose(2, 0, 1)
 
 src_img_raw = to_chw(src_img_raw)
 tgt_img_raw = to_chw(tgt_img_raw)
-
-# Fix label orientation: must be [H, W]
-def to_hw(arr):
-    if arr.ndim == 2:
-        if arr.shape[0] < arr.shape[1]:  # [W, H] → transpose
-            arr = arr.T
-    return arr
-
-src_lbl7 = to_hw(src_lbl7)
-tgt_lbl7 = to_hw(tgt_lbl7)
 
 print(f"Source image: {src_img_raw.shape}, label: {src_lbl7.shape}")
 print(f"Target image: {tgt_img_raw.shape}, label: {tgt_lbl7.shape}")

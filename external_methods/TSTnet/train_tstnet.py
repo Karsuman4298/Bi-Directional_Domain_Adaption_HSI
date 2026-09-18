@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='PyTorch TSTnet')
 
 parser.add_argument('--save_path', type=str, default="./results/",
                     help='the path to save the model')
-parser.add_argument('--data_path', type=str, default='./datasets/Houston/',
+parser.add_argument('--data_path', type=str, default='../../Houston/',
                     help='the path to load the data')
 parser.add_argument('--log_path', type=str, default='./logs',
                     help='the path to load the data')
