@@ -198,8 +198,8 @@ if __name__ == '__main__':
         for batch_idx in range(1, num_iter):
             if batch_idx % len(train_tar_loader) == 0:
                 iter_target = iter(train_tar_loader)
-            data_source, label_source = iter_source.next()
-            data_target, _ = iter_target.next()
+            data_source, label_source = next(iter_source)
+            data_target, _ = next(iter_target)
             label_source = label_source - 1
             if args.cuda:
                 data1, target1 = data_source.cuda(), label_source.cuda()

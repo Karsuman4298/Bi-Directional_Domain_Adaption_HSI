@@ -24,6 +24,13 @@ try:
 except ImportError:
     cv2 = None  # cv2 optional – guided filter will not be available
 
+import hdf5storage
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']
+from sklearn.decomposition import PCA
+from skimage import exposure
+import argparse
+
 def PlotColor(label):
     "将Label以热力图的形式进行可视化"
     plt.imshow(label, cmap='viridis', interpolation='nearest')

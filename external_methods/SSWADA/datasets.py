@@ -207,30 +207,7 @@ def get_dataset(dataset_name, target_folder="./", datasets=DATASETS_CONFIG):
                         "Cattail marsh", "Salt marsh", "Mud flats", "Wate"]
 
         ignored_labels = [0]
-    elif dataset_name == 'Houston13':
-        # Load the image
-        img = open_file(folder + 'Houston13.mat')['ori_data']
 
-        rgb_bands = (43, 21, 11)
-
-        gt = open_file(folder + 'Houston13_7gt.mat')['map']
-
-        label_values = ['Grass healthy','Grass stressed','Trees','Water','Residential buildings',
-                        'Non-residential buildings','Road']
-
-        ignored_labels = [0]
-    elif dataset_name == 'Houston18':
-        # Load the image
-        img = open_file(folder + 'Houston18.mat')['ori_data']
-
-        rgb_bands = (43, 21, 11)
-
-        gt = open_file(folder + 'Houston18_7gt.mat')['map']
-
-        label_values = ['Grass healthy','Grass stressed','Trees','Water','Residential buildings',
-                        'Non-residential buildings','Road']
-
-        ignored_labels = [0]
     elif dataset_name == 'Shanghai':
         # Load the image
         img = open_file(folder + 'Shanghai.mat')['ori_data'][:, :, :192]

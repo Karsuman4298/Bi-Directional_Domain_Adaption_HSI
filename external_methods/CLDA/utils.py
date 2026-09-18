@@ -72,7 +72,7 @@ def obtain_label(loader, netE, netC1, netC2):
     with torch.no_grad():
         iter_test = iter(loader)
         for i in range(len(loader)):
-            data = iter_test.next()
+            data = next(iter_test)
             inputs = data[0]
             labels = data[1]
 

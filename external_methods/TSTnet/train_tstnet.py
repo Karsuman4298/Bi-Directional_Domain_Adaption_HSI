@@ -98,8 +98,8 @@ def train(epoch, model_TST, num_epoch):
         model_TST.train()
         if 0 < (len_tar_train_dataset-i*bs) < bs or i % len_tar_train_loader == 0:
             iter_target = data_prefetcher(train_tar_loader)
-        data_src, label_src = iter_source.next()
-        data_tar, label_tar = iter_target.next()
+        data_src, label_src = next(iter_source)
+        data_tar, label_tar = next(iter_target)
         label_src = label_src - 1
         label_tar = label_tar - 1
 

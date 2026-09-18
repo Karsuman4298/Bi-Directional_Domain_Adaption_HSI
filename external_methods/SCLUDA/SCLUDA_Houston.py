@@ -190,8 +190,8 @@ for iDataSet in range(nDataSet):
         num_iter = len_source_loader
 
         for i in range(1,num_iter):
-            source_data, source_label = iter_source.next()
-            target_data, target_label = iter_target.next()
+            source_data, source_label = next(iter_source)
+            target_data, target_label = next(iter_target)
 
             if i % len_target_loader == 0:
                 iter_target = iter(train_loader_t)
@@ -251,7 +251,7 @@ for iDataSet in range(nDataSet):
             if epoch >= train_num:
                 if i % len_clean_loader == 0:
                     iter_clean = iter(clean_loader)
-                clean_data, clean_label = iter_clean.next()
+                clean_data, clean_label = next(iter_clean)
                 clean_features, _, _, clean_outputs, _ = feature_encoder(clean_data.cuda())
                 target_cls_loss = 0.03 * crossEntropy(clean_outputs, clean_label.cuda())
                 optimizer.zero_grad()

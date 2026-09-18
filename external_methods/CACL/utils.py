@@ -265,9 +265,9 @@ def sampling_fixed_list(sample_num_list, gt, seed):
 
 
 def sample_gt(gt, train_size, seed, mode='fix'):
-    gt_1d = gt.reshape(np.prod(gt.shape[:2]), ).astype(np.int)
-    train_data = np.zeros(np.prod(gt.shape[:2]), ).astype(np.int)
-    test_data = np.zeros(np.prod(gt.shape[:2]), ).astype(np.int)
+    gt_1d = gt.reshape(np.prod(gt.shape[:2]), ).astype(int)
+    train_data = np.zeros(np.prod(gt.shape[:2]), ).astype(int)
+    test_data = np.zeros(np.prod(gt.shape[:2]), ).astype(int)
 
     if mode == 'fix':
         train_index, test_index = sampling_fixed_num(train_size, gt_1d, seed)
