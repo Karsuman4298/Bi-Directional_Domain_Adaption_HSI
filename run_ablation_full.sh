@@ -11,7 +11,7 @@
 SEEDS=(678 681 774 789)
 SOURCE="Houston13"
 TARGET="Houston18"
-INTERNAL_MODELS=("SelfAttentionAgentBiDA")
+INTERNAL_MODELS=()
 EXTERNAL_METHODS=("PCADA" "TSTnet" "MDGTnet" "CLDA" "SCLUDA" "SSWADA" "CACL" "MLUDA")
 
 echo "Starting Ablation Study ($SOURCE -> $TARGET)..."
