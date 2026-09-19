@@ -56,7 +56,7 @@ group_da.add_argument('--mixture_augmentation', action='store_true', default=Fal
                       help="Random mixes between spectra")
 
 args = parser.parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DEV = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
 args.cuda = not args.no_cuda and torch.cuda.is_available()

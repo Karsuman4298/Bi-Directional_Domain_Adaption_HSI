@@ -93,7 +93,7 @@ acc = np.zeros([nDataSet, 1])
 A = np.zeros([nDataSet, CLASS_NUM])
 k = np.zeros([nDataSet, 1])
 
-seeds = [1331, 1337, 1220, 1339, 1227, 1228, 1229, 1232, 1222, 1233]
+seeds = [args.seed]
 best_predict_all = 0
 best_test_acc = 0
 best_G,best_RandPerm,best_Row,best_Column = None,None,None,None

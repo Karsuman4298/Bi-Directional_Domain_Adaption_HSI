@@ -14,8 +14,8 @@ parser.add_argument('--seed', type=int, default=1, help='number of seed')
 parser.add_argument('--epochs', type=int, default=200, help='epoch number')
 parser.add_argument('--learning_rate', type=float, default=5e-4, help='learning rate')
 parser.add_argument('--dataset', choices=['S_Pavia', 'S_YRD', 'M_Houston'], default='S_Pavia', help='dataset to use')
-parser.add_argument('--source_name', choices=['paviaU', 'NC16', 'Houston13'], default='paviaU', help='the name of the source dir')
-parser.add_argument('--target_name', choices=['paviaC', 'NC13', 'Houston18'], default='paviaC', help='the name of the target dir')
+parser.add_argument('--source_name', choices=['paviaU', 'NC16', 'Houston13', 'Houston18'], default='paviaU', help='the name of the source dir')
+parser.add_argument('--target_name', choices=['paviaC', 'NC13', 'Houston18', 'Houston13'], default='paviaC', help='the name of the target dir')
 parser.add_argument('--in_channel', type=int, choices=[102, 270, 48], default=102, help='number of channel')
 parser.add_argument('--train_size', choices=[100], default=100, help='training sample size')
 parser.add_argument('--flag_load', choices=['Y', 'N'], default='N', help='loading mark')
@@ -25,7 +25,7 @@ parser.add_argument('--factor_lambda', choices=[0, 0.001, 0.01, 0.1, 1], default
 parser.add_argument('--batch_size', type=int, default=36, help='number of batch')
 parser.add_argument('--patch_size', type=int, default=5, help='size of patch')
 args = parser.parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(args.gpu_id))
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 

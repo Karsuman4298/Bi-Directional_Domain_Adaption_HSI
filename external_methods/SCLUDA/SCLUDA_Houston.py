@@ -1,6 +1,7 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, default=678)
+parser.add_argument('--epochs', type=int, default=100)
 args = parser.parse_args()
 import math
 import torch
@@ -16,6 +17,10 @@ import utils
 from torch.utils.data import TensorDataset, DataLoader
 from contrastive_loss import SupConLoss
 from config_Houston import *
+# One requested seed and budget per invocation.
+epochs = args.epochs
+nDataSet = 1
+seeds = [args.seed]
 from sklearn import svm
 
 # Patch for older scikit-learn + newer numpy compatibility
