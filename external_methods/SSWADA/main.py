@@ -77,6 +77,7 @@ if __name__ == '__main__':
     target_name = 'Houston18'
     FOLDER = '../../Houston/'
     result_dir = './Result_comparison/'
+    os.makedirs(result_dir, exist_ok=True)
 
     img_src, gt_src, LABEL_VALUES_src, IGNORED_LABELS, RGB_BANDS, palette = get_dataset(source_name,
                                                                                         FOLDER)

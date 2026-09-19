@@ -147,6 +147,14 @@ def to_chw(arr):
 src_img_raw = to_chw(src_img_raw)
 tgt_img_raw = to_chw(tgt_img_raw)
 
+# Ensure labels are [H, W] to match image [C, H, W]
+_, H_src, W_src = src_img_raw.shape
+if src_lbl7.shape != (H_src, W_src):
+    src_lbl7 = src_lbl7.T
+_, H_tgt, W_tgt = tgt_img_raw.shape
+if tgt_lbl7.shape != (H_tgt, W_tgt):
+    tgt_lbl7 = tgt_lbl7.T
+
 print(f"Source image: {src_img_raw.shape}, label: {src_lbl7.shape}")
 print(f"Target image: {tgt_img_raw.shape}, label: {tgt_lbl7.shape}")
 

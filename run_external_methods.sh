@@ -6,62 +6,66 @@ echo "================================================="
 echo "Running External Methods for Houston 13 -> 18"
 echo "================================================="
 
+# Save the root project directory
+ROOT_DIR=$(pwd)
+
 # 1. TSTnet
 echo "--> Starting TSTnet"
-cd external_methods/TSTnet
+cd "$ROOT_DIR/external_methods/TSTnet"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
+    python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
 done
-cd ../..
 
 # 2. PCADA
 echo "--> Starting PCADA"
-cd external_methods/PCADA
+cd "$ROOT_DIR/external_methods/PCADA"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 train_pcada_houston.py --seed $SEED --epochs $EPOCHS
+    python3 train_pcada_houston.py --seed $SEED --epochs $EPOCHS
 done
-cd ../..
 
 # 3. CLDA
 echo "--> Starting CLDA"
-cd external_methods/CLDA
+cd "$ROOT_DIR/external_methods/CLDA"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 CLDA_HOUSTON13_2_18.py --seed $SEED --epochs $EPOCHS
+    python3 CLDA_HOUSTON13_2_18.py --seed $SEED --epochs $EPOCHS
 done
-cd ../..
 
 # 4. MDGTnet
 echo "--> Starting MDGTnet"
-cd external_methods/MDGTnet
+cd "$ROOT_DIR/external_methods/MDGTnet"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 train_mdgtnet_houston.py --seed $SEED --epochs $EPOCHS
+    python3 train_mdgtnet_houston.py --seed $SEED --epochs $EPOCHS
 done
-cd ../..
 
 # 5. SCLUDA
 echo "--> Starting SCLUDA"
-cd external_methods/SCLUDA
+cd "$ROOT_DIR/external_methods/SCLUDA"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 SCLUDA_Houston.py --seed $SEED
+    python3 SCLUDA_Houston.py --seed $SEED
 done
-cd ../..
 
 # 6. MLUDA
 echo "--> Starting MLUDA"
-cd external_methods/MLUDA
+cd "$ROOT_DIR/external_methods/MLUDA"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 MLUDA_hu.py --seed $SEED
+    python3 MLUDA_hu.py --seed $SEED
 done
-cd ../..
 
 # 7. SSWADA
 echo "--> Starting SSWADA"
-cd external_methods/SSWADA
+cd "$ROOT_DIR/external_methods/SSWADA"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
 for SEED in $SEEDS; do
-    PYTHONPATH=$(pwd) python3 main.py --seed $SEED --num_epoch $EPOCHS
+    python3 main.py --seed $SEED --num_epoch $EPOCHS
 done
-cd ../..
 
+cd "$ROOT_DIR"
 echo "================================================="
 echo "All external methods completed!"
 echo "Run 'python3 generate_ablation_table.py' to view all combined results."
