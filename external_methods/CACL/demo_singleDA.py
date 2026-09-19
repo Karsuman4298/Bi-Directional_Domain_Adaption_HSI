@@ -16,7 +16,7 @@ parser.add_argument('--learning_rate', type=float, default=5e-4, help='learning 
 parser.add_argument('--dataset', choices=['S_Pavia', 'S_YRD', 'M_Houston'], default='S_Pavia', help='dataset to use')
 parser.add_argument('--source_name', choices=['paviaU', 'NC16', 'Houston13'], default='paviaU', help='the name of the source dir')
 parser.add_argument('--target_name', choices=['paviaC', 'NC13', 'Houston18'], default='paviaC', help='the name of the target dir')
-parser.add_argument('--in_channel', choices=[102, 270, 48], default=102, help='number of channel')
+parser.add_argument('--in_channel', type=int, choices=[102, 270, 48], default=102, help='number of channel')
 parser.add_argument('--train_size', choices=[100], default=100, help='training sample size')
 parser.add_argument('--flag_load', choices=['Y', 'N'], default='N', help='loading mark')
 parser.add_argument('--flag_record', choices=[True, False], default=False, help='loading mark')
