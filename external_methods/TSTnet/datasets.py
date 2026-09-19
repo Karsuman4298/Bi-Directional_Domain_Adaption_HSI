@@ -225,3 +225,125 @@ class HSIDataset(torch.utils.data.Dataset):
             patch = self.transform(patch)
             
         return patch, label
+
+
+# ─── TSTnet-compatible API ───────────────────────────────────────────────────
+
+HOUSTON_PALETTE = {
+    0: (0, 0, 0),       # Background
+    1: (255, 0, 0),     # Class 1
+    2: (0, 255, 0),     # Class 2
+    3: (0, 0, 255),     # Class 3
+    4: (255, 255, 0),   # Class 4
+    5: (255, 0, 255),   # Class 5
+    6: (0, 255, 255),   # Class 6
+    7: (128, 128, 0),   # Class 7
+}
+
+def get_dataset(dataset_name, dataset_dir, norm='normband'):
+    """Load a dataset and return (img, gt, label_values, ignored_labels, rgb_bands, palette).
+    
+    This wraps load_mat_hsi to match the 6-return signature expected by TSTnet.
+    Note: load_mat_hsi returns gt 0-indexed (subtracts 1), but TSTnet expects
+    1-indexed gt (0 = background). We add 1 back to restore original convention.
+    """
+    img, gt, labels = load_mat_hsi(dataset_name, dataset_dir, norm=norm)
+    # load_mat_hsi subtracts 1 from gt; TSTnet expects original 1-indexed labels
+    gt = gt + 1
+    label_values = ['Undefined'] + labels
+    ignored_labels = [0]
+    rgb_bands = (0, 1, 2)
+    palette = HOUSTON_PALETTE
+    return img, gt, label_values, ignored_labels, rgb_bands, palette
+
+
+class HyperX(torch.utils.data.Dataset):
+    """TSTnet-compatible dataset that produces (1, C, P, P) patches with 1-indexed labels."""
+
+    def __init__(self, data, gt, patch_size=13, flip_augmentation=False,
+                 radiation_augmentation=False, mixture_augmentation=False,
+                 center_pixel=False, supervision='full', **kwargs):
+        super().__init__()
+        self.data = data
+        self.label = gt
+        self.patch_size = patch_size
+        self.flip_augmentation = flip_augmentation
+        self.radiation_augmentation = radiation_augmentation
+        self.mixture_augmentation = mixture_augmentation
+        self.center_pixel = center_pixel
+        self.supervision = supervision
+
+        # Build index of labeled pixels
+        mask = np.ones_like(gt, dtype=bool)
+        for l in kwargs.get('ignored_labels', [0]):
+            mask[gt == l] = False
+        self.indices = np.argwhere(mask)
+
+        # Reflect-pad for border patches
+        margin = patch_size // 2
+        self.padded_data = np.pad(
+            data,
+            ((margin, margin), (margin, margin), (0, 0)),
+            mode='reflect'
+        )
+
+        np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return len(self.indices)
+
+    def __getitem__(self, idx):
+        x, y = self.indices[idx]
+        margin = self.patch_size // 2
+        patch = self.padded_data[x:x + self.patch_size, y:y + self.patch_size, :]
+        label = self.label[x, y]
+
+        # Data augmentation
+        if self.flip_augmentation and np.random.random() > 0.5:
+            patch = np.flip(patch, axis=np.random.randint(2)).copy()
+        if self.radiation_augmentation and np.random.random() > 0.5:
+            patch = patch * (1 + np.random.uniform(-0.1, 0.1))
+
+        # (H, W, C) -> (1, C, H, W)
+        patch = np.ascontiguousarray(patch.transpose(2, 0, 1), dtype=np.float32)
+        patch = torch.from_numpy(patch).unsqueeze(0)
+        label = torch.tensor(label, dtype=torch.long)
+        return patch, label
+
+
+class data_prefetcher:
+    """Async CUDA data prefetcher — wraps a DataLoader for GPU-side pre-loading."""
+
+    def __init__(self, loader):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream() if torch.cuda.is_available() else None
+        self.preload()
+
+    def preload(self):
+        try:
+            self.next_input, self.next_target = next(self.loader)
+        except StopIteration:
+            self.next_input = None
+            self.next_target = None
+            return
+        if self.stream is not None:
+            with torch.cuda.stream(self.stream):
+                self.next_input = self.next_input.cuda(non_blocking=True)
+                self.next_target = self.next_target.cuda(non_blocking=True)
+
+    def __next__(self):
+        if self.stream is not None:
+            torch.cuda.current_stream().wait_stream(self.stream)
+        input = self.next_input
+        target = self.next_target
+        if input is None:
+            raise StopIteration
+        self.preload()
+        return input, target
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+

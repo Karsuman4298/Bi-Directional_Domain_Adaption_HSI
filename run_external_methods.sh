@@ -9,13 +9,13 @@ echo "================================================="
 # Save the root project directory
 ROOT_DIR=$(pwd)
 
-# 1. TSTnet (SKIPPED - datasets.py needs original TSTnet-compatible version)
-echo "--> SKIPPING TSTnet (datasets.py incompatible, fix separately)"
-# cd "$ROOT_DIR/external_methods/TSTnet"
-# export PYTHONPATH="$(pwd):${PYTHONPATH}"
-# for SEED in $SEEDS; do
-#     python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
-# done
+# 1. TSTnet
+echo "--> Starting TSTnet"
+cd "$ROOT_DIR/external_methods/TSTnet"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
+for SEED in $SEEDS; do
+    python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
+done
 
 # 2. PCADA
 echo "--> Starting PCADA"
