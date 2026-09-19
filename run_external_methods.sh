@@ -10,7 +10,7 @@ echo "================================================="
 echo "--> Starting TSTnet"
 cd external_methods/TSTnet
 for SEED in $SEEDS; do
-    python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
+    PYTHONPATH=. python3 train_tstnet.py --seed $SEED --num_epoch $EPOCHS
 done
 cd ../..
 
@@ -18,7 +18,7 @@ cd ../..
 echo "--> Starting PCADA"
 cd external_methods/PCADA
 for SEED in $SEEDS; do
-    python3 train_pcada_houston.py --seed $SEED --epochs $EPOCHS
+    PYTHONPATH=. python3 train_pcada_houston.py --seed $SEED --epochs $EPOCHS
 done
 cd ../..
 
@@ -26,7 +26,7 @@ cd ../..
 echo "--> Starting CLDA"
 cd external_methods/CLDA
 for SEED in $SEEDS; do
-    python3 CLDA_HOUSTON13_2_18.py --seed $SEED --epochs $EPOCHS
+    PYTHONPATH=. python3 CLDA_HOUSTON13_2_18.py --seed $SEED --epochs $EPOCHS
 done
 cd ../..
 
@@ -34,7 +34,7 @@ cd ../..
 echo "--> Starting MDGTnet"
 cd external_methods/MDGTnet
 for SEED in $SEEDS; do
-    python3 train_mdgtnet_houston.py --seed $SEED --epochs $EPOCHS
+    PYTHONPATH=. python3 train_mdgtnet_houston.py --seed $SEED --epochs $EPOCHS
 done
 cd ../..
 
@@ -42,7 +42,7 @@ cd ../..
 echo "--> Starting SCLUDA"
 cd external_methods/SCLUDA
 for SEED in $SEEDS; do
-    python3 SCLUDA_Houston.py --seed $SEED
+    PYTHONPATH=. python3 SCLUDA_Houston.py --seed $SEED
 done
 cd ../..
 
@@ -50,7 +50,7 @@ cd ../..
 echo "--> Starting MLUDA"
 cd external_methods/MLUDA
 for SEED in $SEEDS; do
-    python3 MLUDA_hu.py --seed $SEED
+    PYTHONPATH=. python3 MLUDA_hu.py --seed $SEED
 done
 cd ../..
 
@@ -58,7 +58,7 @@ cd ../..
 echo "--> Starting SSWADA"
 cd external_methods/SSWADA
 for SEED in $SEEDS; do
-    python3 main.py --seed $SEED --num_epoch $EPOCHS
+    PYTHONPATH=. python3 main.py --seed $SEED --num_epoch $EPOCHS
 done
 cd ../..
 
