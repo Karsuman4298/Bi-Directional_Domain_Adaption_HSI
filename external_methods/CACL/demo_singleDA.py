@@ -13,10 +13,10 @@ parser.add_argument('--gpu_id', default='3', help='gpu id')
 parser.add_argument('--seed', type=int, default=1, help='number of seed')
 parser.add_argument('--epochs', type=int, default=200, help='epoch number')
 parser.add_argument('--learning_rate', type=float, default=5e-4, help='learning rate')
-parser.add_argument('--dataset', choices=['S_Pavia', 'S_YRD'], default='S_Pavia', help='dataset to use')
-parser.add_argument('--source_name', choices=['paviaU', 'NC16'], default='paviaU', help='the name of the source dir')
-parser.add_argument('--target_name', choices=['paviaC', 'NC13'], default='paviaC', help='the name of the target dir')
-parser.add_argument('--in_channel', choices=[102, 270], default=102, help='number of channel')
+parser.add_argument('--dataset', choices=['S_Pavia', 'S_YRD', 'M_Houston'], default='S_Pavia', help='dataset to use')
+parser.add_argument('--source_name', choices=['paviaU', 'NC16', 'Houston13'], default='paviaU', help='the name of the source dir')
+parser.add_argument('--target_name', choices=['paviaC', 'NC13', 'Houston18'], default='paviaC', help='the name of the target dir')
+parser.add_argument('--in_channel', choices=[102, 270, 48], default=102, help='number of channel')
 parser.add_argument('--train_size', choices=[100], default=100, help='training sample size')
 parser.add_argument('--flag_load', choices=['Y', 'N'], default='N', help='loading mark')
 parser.add_argument('--flag_record', choices=[True, False], default=False, help='loading mark')
@@ -77,7 +77,18 @@ def experiment():
     print("**************************************************")
     print("Parameter:")
     print_args(vars(args))
-
+    
+    import json
+    res_dict = {
+        'OA': float(OA) * 100,
+        'AA': float(AA) * 100,
+        'Kappa': float(Kappa) * 100,
+        'classes': {str(i+1): float(CA[i]*100) for i in range(len(CA))}
+    }
+    os.makedirs('../../ablation_results', exist_ok=True)
+    json_path = os.path.join('../../ablation_results', f"CACL_results_seed_{args.seed}.json")
+    with open(json_path, 'w') as f:
+        json.dump(res_dict, f, indent=4)
 
 
 if __name__ == '__main__':

@@ -65,6 +65,14 @@ for SEED in $SEEDS; do
     python3 main.py --seed $SEED --num_epoch $EPOCHS
 done
 
+# 8. CACL
+echo "--> Starting CACL"
+cd "$ROOT_DIR/external_methods/CACL"
+export PYTHONPATH="$(pwd):${PYTHONPATH}"
+for SEED in $SEEDS; do
+    python3 demo_singleDA.py --dataset M_Houston --source_name Houston13 --target_name Houston18 --in_channel 48 --seed $SEED --epochs $EPOCHS
+done
+
 cd "$ROOT_DIR"
 echo "================================================="
 echo "All external methods completed!"
