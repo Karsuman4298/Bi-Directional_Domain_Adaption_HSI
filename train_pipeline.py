@@ -9,6 +9,7 @@ from utils.utils_HSI import metrics
 from loss.mmd_loss import MMD_loss
 
 def train(network, network_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, saving_path, device, scheduler):
+    raise RuntimeError("Legacy target-test-selected training is disabled. Use python -m experiments.run or run_fair_houston.sh.")
 
     global_step = 0
     best_test_acc = 0
@@ -49,8 +50,8 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                 loss_cls = criterion(out_x, targets)
                 loss_dis = distill_loss(out_x_fusion, out_x_tar)
                 loss_dis_src = distill_loss(out_x_fusion_src, out_x)
-                loss_con_tar = softmax_mse_loss(F.softmax(out_x_tar, dim=1), F.softmax(out_x_tar_ema, dim=1)) / data_tar[0].shape[0]
-                loss_con_src = softmax_mse_loss(F.softmax(out_x, dim=1), F.softmax(out_x_ema, dim=1)) / data_src[0].shape[0]
+                loss_con_tar = softmax_mse_loss(out_x_tar, out_x_tar_ema) / data_tar[0].shape[0]
+                loss_con_src = softmax_mse_loss(out_x, out_x_ema) / data_src[0].shape[0]
                 
                 if e > 100 and opts.bs == images.shape[0] and opts.bs == images_tar.shape[0]:
                     Align_loss = (MMD_criterion(
@@ -243,6 +244,7 @@ def softmax_mse_loss(input_logits, target_logits):
 
 
 def train_standard(network, optimizer, criterion, num_classes, train_loader, val_loader, opts, saving_path, device, scheduler):
+    raise RuntimeError("Legacy target-test-selected training is disabled. Use python -m experiments.run or run_fair_houston.sh.")
     global_step = 0
     best_test_acc = 0
     losses = []

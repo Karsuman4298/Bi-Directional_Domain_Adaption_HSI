@@ -43,6 +43,8 @@ class Mlp(nn.Module):
 class AgentAttention(nn.Module):
     def __init__(self, dim, num_heads=8, num_agents=4, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
         super().__init__()
+        if num_agents < 1 or dim % num_heads:
+            raise ValueError("Require num_agents >= 1 and dim divisible by num_heads")
         self.num_heads = num_heads
         self.num_agents = num_agents
         head_dim = dim // num_heads
@@ -69,14 +71,13 @@ class AgentAttention(nn.Module):
         if pool_size <= 0:
             return cls_token
             
-        if x.device.type == 'mps':
-            import torch.nn.functional as F
-            pooled_patches = F.interpolate(patch_tokens, size=pool_size, mode='linear', align_corners=False)
-        else:
-            import torch.nn.functional as F
-            pooled_patches = F.adaptive_avg_pool1d(patch_tokens, pool_size)
-            
-        # Re-concatenate the pristine CLS agent with the pooled spatial agents
+        # Explicit adaptive-average bins give identical semantics on CPU/CUDA/MPS.
+        n = patch_tokens.shape[-1]
+        pooled_patches = torch.stack([
+            patch_tokens[..., (i * n) // pool_size:((i + 1) * n + pool_size - 1) // pool_size].mean(-1)
+            for i in range(pool_size)
+        ], dim=-1)
+
         return torch.cat((cls_token, pooled_patches), dim=2)
 
     def forward(self, x, x2, inference_target_only=False, debug_shapes=False):
@@ -86,7 +87,7 @@ class AgentAttention(nn.Module):
             q2, k2, v2 = qkv2[0], qkv2[1], qkv2[2]
 
             # Generate agents from Q2
-            q2_reshaped = q2.reshape(B * self.num_heads, C // self.num_heads, N)
+            q2_reshaped = q2.transpose(2, 3).reshape(B * self.num_heads, C // self.num_heads, N)
             agent_q2 = self._pool_1d(q2_reshaped, self.num_agents).reshape(B, self.num_heads, C // self.num_heads, self.num_agents).transpose(2, 3)
 
             if debug_shapes:
@@ -98,18 +99,18 @@ class AgentAttention(nn.Module):
             # Stage 1: Agent Aggregation (Tokens -> Agents)
             attn_agent2 = (agent_q2 @ k2.transpose(-2, -1)) * self.scale
             if debug_shapes:
-                print(f"A K^T          : {list(attn_agent2.shape)}")
+                print(f"A K^T : {list(attn_agent2.shape)}")
                 
             attn_agent2 = attn_agent2.softmax(dim=-1)
             attn_agent2 = self.attn_drop(attn_agent2)
             VA2 = attn_agent2 @ v2
             if debug_shapes:
-                print(f"VA             : {list(VA2.shape)}")
+                print(f"VA : {list(VA2.shape)}")
 
             # Stage 2: Agent Broadcast (Agents -> Tokens)
             attn_feature2 = (q2 @ agent_q2.transpose(-2, -1)) * self.scale
             if debug_shapes:
-                print(f"Q A^T          : {list(attn_feature2.shape)}")
+                print(f"Q A^T : {list(attn_feature2.shape)}")
                 
             attn_feature2 = attn_feature2.softmax(dim=-1)
             attn_feature2 = self.attn_drop(attn_feature2)
@@ -135,13 +136,13 @@ class AgentAttention(nn.Module):
             v_st = torch.cat((v2, v), dim=0)
 
             # Generate agents from queries
-            q_reshaped = q.reshape(B * self.num_heads, C // self.num_heads, N)
+            q_reshaped = q.transpose(2, 3).reshape(B * self.num_heads, C // self.num_heads, N)
             agent_q = self._pool_1d(q_reshaped, self.num_agents).reshape(B, self.num_heads, C // self.num_heads, self.num_agents).transpose(2, 3)
 
-            q2_reshaped = q2.reshape(B * self.num_heads, C // self.num_heads, N)
+            q2_reshaped = q2.transpose(2, 3).reshape(B * self.num_heads, C // self.num_heads, N)
             agent_q2 = self._pool_1d(q2_reshaped, self.num_agents).reshape(B, self.num_heads, C // self.num_heads, self.num_agents).transpose(2, 3)
 
-            q_st_reshaped = q_st.reshape(2 * B * self.num_heads, C // self.num_heads, N)
+            q_st_reshaped = q_st.transpose(2, 3).reshape(2 * B * self.num_heads, C // self.num_heads, N)
             agent_q_st = self._pool_1d(q_st_reshaped, self.num_agents).reshape(2 * B, self.num_heads, C // self.num_heads, self.num_agents).transpose(2, 3)
 
             # Stage 1: Aggregation
@@ -202,7 +203,7 @@ class AgentTransformerBlock(nn.Module):
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
         
-    def forward(self, x, x2, x1_x2_fusion, inference_target_only=False, debug_shapes=False):
+    def forward(self, x, x2, x1_x2_fusion, x_fusion_src, inference_target_only=False, debug_shapes=False):
         if inference_target_only:
             _, xa_attn2, _, _ = self.attn(None, self.norm1(x2), inference_target_only=inference_target_only, debug_shapes=debug_shapes)
             xb = x2 + self.drop_path(xa_attn2)
@@ -219,7 +220,7 @@ class AgentTransformerBlock(nn.Module):
             xab = x1_x2_fusion + self.drop_path(xa_attn3)
             xab = xab + self.drop_path(self.mlp(self.norm2(xab)))
 
-            xba = x + self.drop_path(xa_attn4)
+            xba = x_fusion_src + self.drop_path(xa_attn4)
             xba = xba + self.drop_path(self.mlp(self.norm2(xba)))
             
         return xa, xb, xab, xba
@@ -295,7 +296,7 @@ class AgentBiDAnet(nn.Module):
         T = self._forward_semantic_tokens(x)
         return T
     
-    def forward(self, x, x_tar, inference_target_only=False, return_feat_prob=False, debug_shapes=False):
+    def forward(self, x, x_tar, inference_target_only=None, return_feat_prob=False, return_features=False, debug_shapes=False):
         if debug_shapes and inference_target_only:
             print(f"Input                 : {list(x_tar.shape)}")
             
@@ -316,11 +317,12 @@ class AgentBiDAnet(nn.Module):
             print(f"After Semantic Tokens : {list(T_tar[:, 1:].shape)}")
             print(f"Transformer Input     : {list(x_tar.shape)}")
             
-        inference_target_only = not self.training if not debug_shapes else inference_target_only
+        inference_target_only = not self.training if inference_target_only is None else inference_target_only
         x_fusion = x_tar
+        x_fusion_src = x
         for i, blk in enumerate(self.blocks):
             x, x_tar, x_fusion, x_fusion_src = blk(
-                x, x_tar, x_fusion, inference_target_only=inference_target_only, debug_shapes=debug_shapes)
+                x, x_tar, x_fusion, x_fusion_src, inference_target_only=inference_target_only, debug_shapes=debug_shapes)
             
         if inference_target_only:
             x_tar = self.norm(x_tar)
@@ -338,7 +340,10 @@ class AgentBiDAnet(nn.Module):
             out_x_tar = self.nn1(self.to_cls_token(x_tar[:, 0]))
             out_x_fusion = self.nn1(self.to_cls_token(x_fusion[:, 0]))
             out_fusion_src = self.nn1(self.to_cls_token(x_fusion_src[:, 0]))
-            return out_x, out_x_tar, out_x_fusion, out_fusion_src
+            logits = (out_x, out_x_tar, out_x_fusion, out_fusion_src)
+            if return_features:
+                return logits, (x[:, 0], x_tar[:, 0], x_fusion[:, 0], x_fusion_src[:, 0])
+            return logits
 
 def AgentBiDA(dataset, opts):
     model = None

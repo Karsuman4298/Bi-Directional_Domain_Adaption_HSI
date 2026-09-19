@@ -11,3 +11,9 @@ inference_outputs/
 
 # PNG outputs
 *.png
+
+# Reproducible experiment artifacts / isolated environments
+fair_results*/
+fair_tables*/
+.venv*/
+.pytest_cache/

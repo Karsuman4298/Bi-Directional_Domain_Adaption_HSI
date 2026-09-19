@@ -1,0 +1,13 @@
+# Python 3.11; install a CUDA-compatible torch wheel separately.
+# Keep NumPy's ABI consistent in a fresh venv. Do not overlay a broken server env.
+numpy==1.26.4
+scipy==1.13.1
+scikit-learn==1.5.2
+h5py==3.11.0
+pandas==2.2.3
+cleanlab==2.7.1
+opencv-contrib-python-headless==4.10.0.84
+scikit-image==0.24.0
+einops==0.8.0
+tqdm==4.66.5
+pytest==8.3.3

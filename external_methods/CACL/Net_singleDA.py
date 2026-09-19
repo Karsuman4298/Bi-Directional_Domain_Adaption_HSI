@@ -51,7 +51,7 @@ class Classifier(nn.Module):
         x = self.conv2_3(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
-        x = F.softmax(x, dim=1)
+        # Return logits: CrossEntropyLoss applies log-softmax internally.
 
         return x
 
@@ -78,7 +78,7 @@ class Discriminator(nn.Module):
         x = self.conv2(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
-        x = F.softmax(x)
+        # Return domain logits for cross-entropy.
         return x
 
 

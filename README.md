@@ -1,3 +1,9 @@
+> **Corrected experiment workflow:** use [docs/FAIR_EXPERIMENTS.md](docs/FAIR_EXPERIMENTS.md)
+> and `bash run_fair_houston.sh both full`. This runs the available UDA baselines
+> and both proposed models for 120 epochs under fixed-final-checkpoint evaluation. Old scores
+> used reflected target labels / test-based checkpoint selection and must be rerun.
+> The older instructions below describe the historical repository.
+
 <h1 align="center"><a href="https://ieeexplore.ieee.org/abstract/document/11072185" style="color:#9C276A">
 Cross-domain Hyperspectral Image Classification based on Bi-directional Domain Adaptation</a></h1>
 <h4 align="center"> If our project helps you, please give us a star ⭐ on GitHub to support us.</h4>
