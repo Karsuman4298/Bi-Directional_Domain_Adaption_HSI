@@ -19,12 +19,14 @@ from config_Houston import *
 from sklearn import svm
 
 # Patch for older scikit-learn + newer numpy compatibility
+import warnings
+class _ComplexWarning(Warning):
+    pass
 try:
     import numpy.core.numeric
-    if not hasattr(numpy.core.numeric, 'ComplexWarning'):
-        numpy.core.numeric.ComplexWarning = np.ComplexWarning
-except Exception:
-    pass
+    numpy.core.numeric.ComplexWarning = _ComplexWarning
+except Exception as e:
+    print("Patch failed:", e)
 
 import cleanlab
 ##################################
