@@ -465,9 +465,9 @@ def sample_gt(gt, train_size, mode='random'):
         if train_size == 1:
             random.shuffle(X)
             train_indices = [list(t) for t in zip(*X)]
-            [train_label.append(i) for i in gt[train_indices]]
+            [train_label.append(i) for i in gt[tuple(train_indices)]]
             train_set = np.column_stack((train_indices[0],train_indices[1],train_label))
-            train_gt[train_indices] = gt[train_indices]
+            train_gt[tuple(train_indices)] = gt[tuple(train_indices)]
             test_gt = []
             
             test_set = []
@@ -475,12 +475,12 @@ def sample_gt(gt, train_size, mode='random'):
             train_indices, test_indices = sklearn.model_selection.train_test_split(X, train_size=train_size, stratify=y, random_state=23)
             train_indices = [list(t) for t in zip(*train_indices)]
             test_indices = [list(t) for t in zip(*test_indices)]
-            train_gt[train_indices] = gt[train_indices]
-            test_gt[test_indices] = gt[test_indices]
+            train_gt[tuple(train_indices)] = gt[tuple(train_indices)]
+            test_gt[tuple(test_indices)] = gt[tuple(test_indices)]
 
-            [train_label.append(i) for i in gt[train_indices]]
+            [train_label.append(i) for i in gt[tuple(train_indices)]]
             train_set = np.column_stack((train_indices[0],train_indices[1],train_label))
-            [test_label.append(i) for i in gt[test_indices]]
+            [test_label.append(i) for i in gt[tuple(test_indices)]]
             test_set = np.column_stack((test_indices[0],test_indices[1],test_label))
 
     elif mode == 'fixed':
@@ -499,12 +499,12 @@ def sample_gt(gt, train_size, mode='random'):
            test_indices += test
        train_indices = [list(t) for t in zip(*train_indices)]
        test_indices = [list(t) for t in zip(*test_indices)]
-       train_gt[train_indices] = gt[train_indices]
-       test_gt[test_indices] = gt[test_indices]
+       train_gt[tuple(train_indices)] = gt[tuple(train_indices)]
+       test_gt[tuple(test_indices)] = gt[tuple(test_indices)]
 
-       [train_label.append(i) for i in gt[train_indices]]
+       [train_label.append(i) for i in gt[tuple(train_indices)]]
        train_set = np.column_stack((train_indices[0],train_indices[1],train_label))
-       [test_label.append(i) for i in gt[test_indices]]
+       [test_label.append(i) for i in gt[tuple(test_indices)]]
        test_set = np.column_stack((test_indices[0],test_indices[1],test_label))
 
     elif mode == 'disjoint':
