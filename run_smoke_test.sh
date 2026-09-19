@@ -11,8 +11,11 @@ for SEED in "${SEEDS[@]}"; do
     echo "=========================================="
     
     echo "Running AgentBiDA (Fixed)..."
-    python3 train_agent_bida_fix.py --source_name $SOURCE --target_name $TARGET --epoch $EPOCHS --seed $SEED --num_agents 2 | grep -E "Epoch:|Accuracy|OA|AA|Kappa" | tail -n 5
+    python3 train_agent_bida_fix.py --source_name $SOURCE --target_name $TARGET --epoch $EPOCHS --seed $SEED --num_agents 2 --num_workers 2 | grep -E "Epoch:|Accuracy|OA|AA|Kappa" | tail -n 5
     
     echo "Running SelfAttentionAgentBiDA (Fixed)..."
-    python3 train_self_attn_agent_bida_fix.py --source_name $SOURCE --target_name $TARGET --epoch $EPOCHS --seed $SEED --num_agents 2 | grep -E "Epoch:|Accuracy|OA|AA|Kappa" | tail -n 5
+    python3 train_self_attn_agent_bida_fix.py --source_name $SOURCE --target_name $TARGET --epoch $EPOCHS --seed $SEED --num_agents 2 --num_workers 2 | grep -E "Epoch:|Accuracy|OA|AA|Kappa" | tail -n 5
+
+    echo "Running Original BiDA..."
+    python3 main.py --model BiDA --source_name $SOURCE --target_name $TARGET --epoch $EPOCHS --seed $SEED --num_workers 2 | grep -E "Epoch:|Accuracy|OA|AA|Kappa" | tail -n 5
 done
