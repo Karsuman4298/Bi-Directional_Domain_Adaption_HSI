@@ -102,7 +102,7 @@ def main(argv=None):
     p.add_argument('--source',choices=['Houston13','Houston18'],required=True)
     p.add_argument('--target',choices=['Houston13','Houston18'],required=True)
     p.add_argument('--models',nargs='+',choices=MODELS,default=MODELS)
-    p.add_argument('--seeds',nargs='+',type=int,default=[2100,2101,2102,2103,2104])
+    p.add_argument('--seeds',nargs='+',type=int,default=[2100,2101,2102])
     p.add_argument('--ablation',default='full');p.add_argument('--num-agents',type=int,default=4)
     a=p.parse_args(argv)
     r=read_results(a.root,a.source,a.target,a.models,a.seeds,a.ablation,a.num_agents)

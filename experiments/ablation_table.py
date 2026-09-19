@@ -9,7 +9,7 @@ from .run import ABLATIONS
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--root',default='fair_results');p.add_argument('--source',required=True)
-    p.add_argument('--target',required=True);p.add_argument('--seeds',nargs='+',type=int,default=[2100,2101,2102,2103,2104])
+    p.add_argument('--target',required=True);p.add_argument('--seeds',nargs='+',type=int,default=[2100,2101,2102])
     p.add_argument('--num-agents',type=int,default=4)
     a=p.parse_args();models=['BiDA','AgentBiDA','SelfAttentionAgentBiDA']
     rows=[];fingerprints=set()

@@ -63,7 +63,7 @@ Logs remain under `fair_results/logs`. `set -euo pipefail` preserves Python erro
 through tee; a missing baseline stops the command instead of creating a partial
 comparison table.
 
-Defaults: 120 epochs and seeds 2100, 2101, 2102, 2103, 2104 for both full benchmarks
+Defaults: 120 epochs and seeds 2100, 2101, 2102 for both full benchmarks
 and component ablations. To change the budget,
 use a new result directory and apply the same budget to every method:
 
@@ -121,7 +121,7 @@ To aggregate a deliberate subset, specify exactly the models/seeds trained:
 
 ```bash
 python -m experiments.table --source Houston13 --target Houston18 \
-  --models GAHT BiDA AgentBiDA SelfAttentionAgentBiDA --seeds 2100 2101 2102 2103 2104
+  --models GAHT BiDA AgentBiDA SelfAttentionAgentBiDA --seeds 2100 2101 2102
 ```
 
 `*.paired.json` contains each proposal's per-seed differences from BiDA and
