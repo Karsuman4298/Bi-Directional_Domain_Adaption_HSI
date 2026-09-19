@@ -157,16 +157,32 @@ def multi_data_patching(Data1, Data2, Label, patchsize):
 
 
 def single_data_loading(dataset_name, source_name, target_name, datasets=SINGLE_DATASETS_CONFIG):
-    if dataset_name not in datasets.keys():
-        raise ValueError("{} dataset is unknown.".format(dataset_name))
-    dataset = datasets[dataset_name]
-    data_path = dataset['data_path']
-    src_data = dataset[source_name]
-    tar_data = dataset[target_name]
-    src_img = hdf5storage.loadmat(data_path + src_data['img_name'] + '.mat')['ori_data']
-    src_gt = hdf5storage.loadmat(data_path + src_data['gt_name'] + '.mat')['map']
-    tar_img = hdf5storage.loadmat(data_path + tar_data['img_name'] + '.mat')['ori_data']
-    tar_gt = hdf5storage.loadmat(data_path + tar_data['gt_name'] + '.mat')['map']
+    if dataset_name == 'M_Houston':
+        import h5py
+        data_path = '../../Houston/'
+        
+        def load_houston(name):
+            img_path = data_path + name + '.mat'
+            gt_path = data_path + name + '_7gt.mat'
+            with h5py.File(img_path, 'r') as f:
+                img = np.array(f['ori_data']).T   # [H,W,C]
+            with h5py.File(gt_path, 'r') as f:
+                gt = np.array(f['map']).T.astype(np.int64)
+            return img, gt
+
+        src_img, src_gt = load_houston(source_name)
+        tar_img, tar_gt = load_houston(target_name)
+    else:
+        if dataset_name not in datasets.keys():
+            raise ValueError("{} dataset is unknown.".format(dataset_name))
+        dataset = datasets[dataset_name]
+        data_path = dataset['data_path']
+        src_data = dataset[source_name]
+        tar_data = dataset[target_name]
+        src_img = hdf5storage.loadmat(data_path + src_data['img_name'] + '.mat')['ori_data']
+        src_gt = hdf5storage.loadmat(data_path + src_data['gt_name'] + '.mat')['map']
+        tar_img = hdf5storage.loadmat(data_path + tar_data['img_name'] + '.mat')['ori_data']
+        tar_gt = hdf5storage.loadmat(data_path + tar_data['gt_name'] + '.mat')['map']
     # Normalization
     [m1, n1, l1] = np.shape(src_img)
     [m2, n2, _] = np.shape(tar_img)
