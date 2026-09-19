@@ -66,7 +66,7 @@ def pairwise_distances(x, y=None):
 	return torch.clamp(dist, 0.0, np.inf)
 
 def IPOT_distance_torch_batch_uniform(C, bs, n, m, iteration=50):
-	C = C.float()
+	C = C.float().cuda()
 	T = IPOT_torch_batch_uniform(C  , bs, n, m, iteration=iteration)
 	temp = torch.bmm(torch.transpose(C,1,2), T)
 	distance = batch_trace(temp, m, bs)
@@ -75,16 +75,16 @@ def IPOT_distance_torch_batch_uniform(C, bs, n, m, iteration=50):
 def IPOT_torch_batch_uniform(C, bs, n, m, beta=0.5, iteration=50):
 	# C is the distance matrix
 	# c: bs by n by m
-	sigma = C.new_ones(bs, int(m), 1)/float(m)
-	T = C.new_ones(bs, n, m)
-	A = torch.exp(-C/beta).float()
+	sigma = torch.ones(bs, int(m), 1).cuda()/float(m)
+	T = torch.ones(bs, n, m).cuda()
+	A = torch.exp(-C/beta).float().cuda()
 	for t in range(1):
 		Q = A * T # bs * n * m
 		del T
 		for k in range(iteration):
-			delta = 1 / (n * torch.bmm(Q, sigma)).clamp_min(1e-12)
+			delta = 1 / (n * torch.bmm(Q, sigma))
 			a = torch.bmm(torch.transpose(Q,1,2), delta)
-			sigma = 1 / (float(m) * a).clamp_min(1e-12)
+			sigma = 1 / (float(m) * a)
 		T = delta * Q * sigma.transpose(2,1)
 		del Q
 
@@ -97,8 +97,8 @@ def GW_distance(X, Y, p, q, lamda=0.5, iteration=5, OT_iteration=20, **kwargs):
 	:param lamda: regularization
 	:return: GW distance
 	'''
-	Cs = cos_batch_torch(X, X).float()
-	Ct = cos_batch_torch(Y, Y).float()
+	Cs = cos_batch_torch(X, X).float().cuda()
+	Ct = cos_batch_torch(Y, Y).float().cuda()
 
 	# pdb.set_trace()
 	bs = Cs.size(0)
@@ -110,8 +110,8 @@ def GW_distance(X, Y, p, q, lamda=0.5, iteration=5, OT_iteration=20, **kwargs):
 	return distance
 
 def GW_torch_batch(Cs, Ct, bs, n, m, p, q, beta=0.5, iteration=5, OT_iteration=20):
-	one_m = Cs.new_ones(bs, m, 1)
-	one_n = Cs.new_ones(bs, n, 1)
+	one_m = torch.ones(bs, m, 1).float().cuda()
+	one_n = torch.ones(bs, n, 1).float().cuda()
 
 	Cst = torch.bmm(torch.bmm(Cs**2, p), torch.transpose(one_m, 1, 2)) + \
 	      torch.bmm(one_n, torch.bmm(torch.transpose(q,1,2), torch.transpose(Ct**2, 1, 2))) # bs by n by m
@@ -134,12 +134,12 @@ def GW_distance_uniform(X, Y, lamda=1e-1, iteration=5, OT_iteration=20, **kwargs
 	m = X.size(2)
 	n = Y.size(2)
 	bs = X.size(0)
-	p = X.new_ones(bs, m, 1)/m
-	q = Y.new_ones(bs, n, 1)/n
+	p = (torch.ones(bs, m, 1)/m).cuda()
+	q = (torch.ones(bs, n, 1)/n).cuda()
 	return GW_distance(X, Y, p, q, lamda=lamda, iteration=iteration, OT_iteration=OT_iteration, **kwargs)
 
 def batch_trace(input_matrix, n, bs):
-	a = torch.eye(n, device=input_matrix.device, dtype=input_matrix.dtype).unsqueeze(0).repeat(bs, 1, 1)
+	a = torch.eye(n).cuda().unsqueeze(0).repeat(bs, 1, 1)
 	b = a * input_matrix
 	return torch.sum(torch.sum(b,-1),-1).unsqueeze(1)
 

@@ -124,7 +124,7 @@ class Block_triple_branches(nn.Module):
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
         
-    def forward(self, x, x2, x1_x2_fusion, x_fusion_src, inference_target_only=False):
+    def forward(self, x, x2, x1_x2_fusion, inference_target_only=False):
         if inference_target_only:
             _, xa_attn2, _, _ = self.attn(None,self.norm1(x2), inference_target_only=inference_target_only)
             xb = x2 + self.drop_path(xa_attn2)
@@ -141,7 +141,7 @@ class Block_triple_branches(nn.Module):
             xab = x1_x2_fusion + self.drop_path(xa_attn3)
             xab = xab + self.drop_path(self.mlp(self.norm2(xab)))
 
-            xba = x_fusion_src + self.drop_path(xa_attn4)
+            xba = x + self.drop_path(xa_attn4)
             xba = xba + self.drop_path(self.mlp(self.norm2(xba)))
             
         return xa, xb, xab, xba
@@ -168,6 +168,14 @@ class BiDAnet(nn.Module):
             nn.BatchNorm2d(dim),
             nn.ReLU(),
         )
+
+        # Tokenization
+        self.token_wA = nn.Parameter(torch.empty(1, self.L, 64),
+                                     requires_grad=True)  # Tokenization parameters
+        torch.nn.init.xavier_normal_(self.token_wA)
+        self.token_wV = nn.Parameter(torch.empty(1, 64, self.cT),
+                                     requires_grad=True)  # Tokenization parameters
+        torch.nn.init.xavier_normal_(self.token_wV)
 
         self.pos_embedding = nn.Parameter(torch.empty(1, (num_tokens + 1), dim))
         torch.nn.init.normal_(self.pos_embedding, std=.02)
@@ -208,23 +216,22 @@ class BiDAnet(nn.Module):
         T = self._forward_semantic_tokens(x)
         return T
     
-    def forward(self, x, x_tar, inference_target_only=None, return_feat_prob=False, return_features=False):
-        T = self._tokenize(x) if x is not None else None
+    def forward(self, x, x_tar, inference_target_only=False, return_feat_prob=False):
+        T = self._tokenize(x)
         T_tar = self._tokenize(x_tar)
-        cls_tokens = self.cls_token.expand(x_tar.shape[0], -1, -1)
-        x = torch.cat((cls_tokens, T), dim=1) if T is not None else None
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+        x = torch.cat((cls_tokens, T), dim=1)
         x_tar = torch.cat((cls_tokens, T_tar), dim=1)
-        if x is not None:
-            x = self.dropout(x + self.pos_embedding)
+        x += self.pos_embedding
         x_tar += self.pos_embedding
+        x = self.dropout(x)  # torch.Size([128, 5, 64])
         x_tar = self.dropout(x_tar)  # torch.Size([128, 5, 64])
         
-        inference_target_only = not self.training if inference_target_only is None else inference_target_only
+        inference_target_only = not self.training
         x_fusion = x_tar
-        x_fusion_src = x
         for i, blk in enumerate(self.blocks):
             x, x_tar, x_fusion, x_fusion_src = blk(
-                x, x_tar, x_fusion, x_fusion_src, inference_target_only=inference_target_only)
+                x, x_tar, x_fusion, inference_target_only=inference_target_only)
         if inference_target_only:
         # if inference_target_only:
             x_tar = self.norm(x_tar)
@@ -242,22 +249,19 @@ class BiDAnet(nn.Module):
             out_x_tar = self.nn1(self.to_cls_token(x_tar[:, 0]))  # torch.Size([128, 64])
             out_x_fusion = self.nn1(self.to_cls_token(x_fusion[:, 0]))  # torch.Size([128, 64])
             out_fusion_src = self.nn1(self.to_cls_token(x_fusion_src[:, 0]))  # torch.Size([128, 64])
-            logits = (out_x, out_x_tar, out_x_fusion, out_fusion_src)
-            if return_features:
-                return logits, (x[:, 0], x_tar[:, 0], x_fusion[:, 0], x_fusion_src[:, 0])
-            return logits
+            return out_x, out_x_tar, out_x_fusion, out_fusion_src
 
 def BiDA(dataset, opts):
     model = None
     if 'MJG' in dataset.split('_'):
         model = BiDAnet(n_bands=64, num_classes=5,
-                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth, heads=getattr(opts, "num_heads", 8))
+                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth)
     elif dataset == 'Houston18' or dataset == 'Houston13':
         model = BiDAnet(n_bands=48, num_classes=7,
-                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth, heads=getattr(opts, "num_heads", 8))
+                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth)
     elif dataset == 'Dioni' or dataset == 'Loukia':
         model = BiDAnet(n_bands=176, num_classes=12,
-                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth, heads=getattr(opts, "num_heads", 8))
+                         num_tokens=opts.num_tokens, dim=opts.dim, depth=opts.depth)
         
     return model
 

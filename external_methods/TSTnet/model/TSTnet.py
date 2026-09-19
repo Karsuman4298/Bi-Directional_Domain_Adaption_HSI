@@ -1,47 +1,37 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-class SAGEConv(nn.Module):
-    """Default mean GraphSAGE (neighbor linear + root linear), without PyG dependency."""
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.lin_l = nn.Linear(in_channels, out_channels)
-        self.lin_r = nn.Linear(in_channels, out_channels, bias=False)
-
-    def forward(self, x, edge_index):
-        src, dst = edge_index
-        sums = x.new_zeros(x.shape).index_add(0, dst, x[src])
-        count = torch.bincount(dst, minlength=len(x)).to(x).clamp_min(1)[:, None]
-        return self.lin_l(sums / count) + self.lin_r(x)
-
-from ..OT_torch_ import cost_matrix_batch_torch, GW_distance_uniform, IPOT_distance_torch_batch_uniform
+from torch_geometric.nn import SAGEConv
+from OT_torch_ import cost_matrix_batch_torch, GW_distance_uniform, IPOT_distance_torch_batch_uniform
 import math
-from types import SimpleNamespace
+from torch_geometric.data import Data
 import torch
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import numpy as np
 
 def getGraphdata(source_share, bs, target_share, target=True):
-    side = math.isqrt(bs)
-    if side * side != bs:
-        raise ValueError("TSTnet requires square training batch size")
-    segments = np.arange(bs).reshape(side, side)
-    edges = torch.as_tensor(getEdge(None, segments), dtype=torch.long, device=source_share.device).T.contiguous()
-    return (SimpleNamespace(x=source_share, edge_index=edges),
-            SimpleNamespace(x=target_share, edge_index=edges) if target else None)
+    segments = torch.reshape(torch.tensor(range(bs)),(-1,int(math.sqrt(bs))))
+    src_edge = torch.tensor(getEdge(source_share, segments)).t().contiguous()
+    source_share_graph = Data(x=source_share,edge_index=src_edge).to(DEVICE)
+    if target == True:
+        tar_edge = torch.tensor(getEdge(target_share, segments)).t().contiguous()
+        target_share_graph = Data(x=target_share,edge_index=tar_edge).to(DEVICE)
+    else:
+        target_share_graph =  0
+    return source_share_graph, target_share_graph
 
 def getEdge(image, segments, compactness=300, sigma=3.):
     coo = set()
     dire = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]]
-    for i in range(segments.shape[0]):
-        for j in range(segments.shape[1]):
+    for i in range(1, segments.shape[0]):
+        for j in range(1, segments.shape[1]):
             for dx, dy in dire:
                 if -1 < i + dx < segments.shape[0] and \
                         -1 < j + dy < segments.shape[1] and \
                         segments[i, j] != segments[i + dx, j + dy]:
                     coo.add((segments[i, j], segments[i + dx, j + dy]))
 
-    coo = np.asarray(sorted(coo), dtype=np.int64).reshape(-1, 2)
+    coo = np.asarray(list(coo))
     return coo
 
 class Topology_Extraction(torch.nn.Module):
@@ -111,7 +101,7 @@ class vgg16(nn.Module):
         self.fc = nn.Linear(256, num_classes)
         if init_weights:
             self._initialize_weights()
-
+        
     def _get_final_flattened_size(self):
         with torch.no_grad():
             x = torch.zeros((1, self.in_channels,
@@ -147,7 +137,7 @@ class Feature_Extractor(nn.Module):
         super(Feature_Extractor, self).__init__()
         self.basemodel = vgg16(in_channels,num_classes, patch_size)
         self.classes = num_classes
-        self.gcn = Global_graph(64 * (patch_size - 8)**2,num_classes) #patch_size=12, 1024 / patch_size=13, 1600
+        self.gcn = Global_graph(1024,num_classes) #patch_size=12, 1024 / patch_size=13, 1600
         self.mmd = MMD_loss(kernel_type='linear')
 
     def forward(self, source, target=None):
@@ -233,7 +223,7 @@ class MMD_loss(nn.Module):
     def linear_mmd2(self, f_of_X, f_of_Y):
         loss = 0.0
         delta = f_of_X.float().mean(0) - f_of_Y.float().mean(0)
-        loss = delta.dot(delta)
+        loss = delta.dot(delta.T)
         return loss
 
     def forward(self, source, target):
