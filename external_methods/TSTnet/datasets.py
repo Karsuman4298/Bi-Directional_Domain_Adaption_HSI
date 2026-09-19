@@ -304,9 +304,9 @@ class HyperX(torch.utils.data.Dataset):
         if self.radiation_augmentation and np.random.random() > 0.5:
             patch = patch * (1 + np.random.uniform(-0.1, 0.1))
 
-        # (H, W, C) -> (1, C, H, W)
+        # (H, W, C) -> (C, H, W)
         patch = np.ascontiguousarray(patch.transpose(2, 0, 1), dtype=np.float32)
-        patch = torch.from_numpy(patch).unsqueeze(0)
+        patch = torch.from_numpy(patch)
         label = torch.tensor(label, dtype=torch.long)
         return patch, label
 
