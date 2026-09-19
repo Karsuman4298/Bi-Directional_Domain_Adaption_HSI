@@ -4,6 +4,14 @@ import math
 import os
 import random
 
+# Patch for older scikit-learn + newer numpy compatibility
+try:
+    import numpy.core.numeric
+    if not hasattr(numpy.core.numeric, 'ComplexWarning'):
+        numpy.core.numeric.ComplexWarning = np.ComplexWarning
+except Exception:
+    pass
+
 import cleanlab
 from sklearn import svm
 import torch

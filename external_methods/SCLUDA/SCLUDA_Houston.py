@@ -17,6 +17,15 @@ from torch.utils.data import TensorDataset, DataLoader
 from contrastive_loss import SupConLoss
 from config_Houston import *
 from sklearn import svm
+
+# Patch for older scikit-learn + newer numpy compatibility
+try:
+    import numpy.core.numeric
+    if not hasattr(numpy.core.numeric, 'ComplexWarning'):
+        numpy.core.numeric.ComplexWarning = np.ComplexWarning
+except Exception:
+    pass
+
 import cleanlab
 ##################################
 data_path_s = '../../Houston/Houston13.mat'
