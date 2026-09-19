@@ -250,7 +250,7 @@ def get_dataset(dataset_name, dataset_dir, norm='normband'):
     img, gt, labels = load_mat_hsi(dataset_name, dataset_dir, norm=norm)
     # load_mat_hsi subtracts 1 from gt; TSTnet expects original 1-indexed labels
     gt = gt + 1
-    label_values = ['Undefined'] + labels
+    label_values = labels
     ignored_labels = [0]
     rgb_bands = (0, 1, 2)
     palette = HOUSTON_PALETTE
