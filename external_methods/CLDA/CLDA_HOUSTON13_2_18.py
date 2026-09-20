@@ -1,4 +1,5 @@
 from __future__ import print_function
+from restored_checkpoint import EpochCheckpoint, collect
 import argparse
 import math
 import os
@@ -361,7 +362,14 @@ for iDataSet in range(nDataSet):
     train_num = 20
 
     class_weights = None
-    for ep in range(1,num_epoch + 1):
+    completed_epochs = 0
+    recovery = EpochCheckpoint({'G':G, 'F1':F1, 'F2':F2, 'optimizer_g':optimizer_g, 'optimizer_f':optimizer_f}, (train_loader_s, test_loader))
+    next_epoch, saved = recovery.load()
+    globals().update(saved)
+    if 'clean_datas' in saved:
+        train_t_dataset = TensorDataset(torch.tensor(clean_datas), torch.tensor(clean_labels))
+        train_loader_t = DataLoader(train_t_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+    for ep in range(next_epoch or 1, num_epoch + 1):
 
         if ep >= train_num :
 
@@ -382,10 +390,12 @@ for iDataSet in range(nDataSet):
                 train_loader_t = DataLoader(train_t_dataset, batch_size=BATCH_SIZE, shuffle=True,drop_last=True)
 
         train(ep, train_loader_s, train_loader_t, train_num, class_weights)
+        completed_epochs = ep
+        recovery.save(ep + 1, collect(globals(), 'clean_datas clean_labels class_weights completed_epochs'))
 
     print('-' * 100, '\nTesting')
 
-    test_accuracy, predict = test(test_loader)
+    test_accuracy, predict, test_all, test_pred_all = test(test_loader)
     fake_label = utils.obtain_label(test_loader, G, F1, F2)
 
     if test_accuracy >= best_test_acc:
@@ -465,23 +475,8 @@ for i in range(best_G.shape[0]):
 
 
 
-from sklearn.metrics import confusion_matrix, cohen_kappa_score
-import json
-
-C = confusion_matrix(test_all, test_pred_all)
-A = np.diag(C) / np.sum(C, 1, dtype=float)
-OA = test_acc
-AA = np.mean(A) * 100
-Kappa = cohen_kappa_score(test_all, test_pred_all) * 100
-
-res_dict = {
-    'OA': float(OA),
-    'AA': float(AA),
-    'Kappa': float(Kappa),
-    'classes': {str(c+1): float(A[c] * 100) for c in range(len(A))}
-}
-
-os.makedirs('../../ablation_results', exist_ok=True)
-json_path = os.path.join('../../ablation_results', f"CLDA_results_seed_{args.seed}.json")
-with open(json_path, 'w') as f:
-    json.dump(res_dict, f, indent=4)
+from restored_reporting import from_predictions, atomic_json
+res_dict = from_predictions(test_all, test_pred_all, 'after_training_loop')
+res_dict['completed_epochs'] = completed_epochs
+res_dict['requested_epochs'] = num_epoch
+atomic_json('../../ablation_results/CLDA_results_seed_' + str(args.seed) + '.json', res_dict)

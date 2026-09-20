@@ -1,3 +1,4 @@
+from restored_checkpoint import EpochCheckpoint, collect
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, default=678)
@@ -95,7 +96,10 @@ for iDataSet in range(nDataSet):
     loss2 = []
     loss3 = []
 
-    for epoch in range(1, epochs + 1):
+    recovery = EpochCheckpoint({'model':feature_encoder}, (train_loader_s, train_loader_t, test_loader))
+    next_epoch, saved = recovery.load()
+    globals().update(saved)
+    for epoch in range(next_epoch or 1, epochs + 1):
         LEARNING_RATE = lr / math.pow((1 + 10 * (epoch - 1) / epochs), 0.75)
         print('learning rate{: .4f}'.format(LEARNING_RATE))
         optimizer = torch.optim.SGD([
@@ -231,6 +235,7 @@ for iDataSet in range(nDataSet):
 
             print('iter:{} best epoch:[{}], best accuracy={}'.format(iDataSet, best_episdoe + 1, last_accuracy))
             print('***********************************************************************************')
+        recovery.save(epoch + 1, collect(globals(), 'last_accuracy best_episdoe best_predict_all best_G best_RandPerm best_Row best_Column acc A k train_end test_end source_data labels predict test_accuracy loss1 loss2 loss3 clean_datas clean_labels class_weights clean_acc'))
 
 AA = np.mean(A, 1)
 AAMean = np.mean(AA,0)
@@ -284,26 +289,6 @@ for i in range(best_G.shape[0]):
 
 # utils.classification_map(hsi_pic[4:-4, 4:-4, :], best_G[4:-4, 4:-4], 24,  "classificationMap/housotn18.png")
 
-from sklearn.metrics import confusion_matrix, cohen_kappa_score
-import json
-
-try:
-    C = confusion_matrix(test_all, test_pred_all)
-    A = np.diag(C) / np.sum(C, 1, dtype=float)
-    OA = test_acc
-    AA = np.mean(A) * 100
-    Kappa = cohen_kappa_score(test_all, test_pred_all) * 100
-
-    res_dict = {
-        'OA': float(OA),
-        'AA': float(AA),
-        'Kappa': float(Kappa),
-        'classes': {str(c+1): float(A[c] * 100) for c in range(len(A))}
-    }
-
-    os.makedirs('../../ablation_results', exist_ok=True)
-    json_path = os.path.join('../../ablation_results', f"MLUDA_results_seed_{args.seed}.json")
-    with open(json_path, 'w') as f:
-        json.dump(res_dict, f, indent=4)
-except Exception as e:
-    print("Could not save JSON:", e)
+from restored_reporting import from_predictions, atomic_json
+res_dict = from_predictions(labels, predict, 'final_epoch')
+atomic_json('../../ablation_results/MLUDA_results_seed_' + str(args.seed) + '.json', res_dict)

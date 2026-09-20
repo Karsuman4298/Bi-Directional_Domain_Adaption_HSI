@@ -1,4 +1,6 @@
 from __future__ import print_function
+from restored_checkpoint import EpochCheckpoint, collect
+from restored_reporting import from_confusion
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import argparse
@@ -257,7 +259,7 @@ if __name__ == '__main__':
         print("train samples :",len_src_dataset)
         print("train tar samples :",len_tar_train_dataset)
 
-        correct, acc = 0, 0
+        correct, acc = -1, 0
         model_TST = TSTnet.Feature_Extractor(img_src.shape[-1],num_classes=gt_src.max(), patch_size=hyperparams['patch_size']).to(DEVICE)
 
         now_time = datetime.now()
@@ -267,7 +269,10 @@ if __name__ == '__main__':
             os.makedirs(log_dir)
         writer = SummaryWriter(log_dir)
 
-        for epoch in range(args.num_epoch):
+        recovery = EpochCheckpoint({'model':model_TST}, (train_loader, train_tar_loader, test_loader))
+        next_epoch, saved = recovery.load()
+        globals().update(saved)
+        for epoch in range(next_epoch if next_epoch is not None else 0, args.num_epoch):
             model_TST, CCN_train_acc, CCN_tar_acc, GCN_acc = train(epoch, model_TST, args.num_epoch)
         
             if epoch % args.log_interval == 0:
@@ -275,7 +280,7 @@ if __name__ == '__main__':
                 if t_correct > correct:
                     correct = t_correct
                     acc = CCN_test_acc
-                    if acc > 0.5:
+                    if True:  # Export the best evaluated checkpoint even below 50% OA.
                         acc_test_list[flag] = acc
                         results = metrics(np.concatenate(pred), np.concatenate(label), ignored_labels=hyperparams['ignored_labels'], n_classes=gt_src.max())
                         print(classification_report(np.concatenate(pred),np.concatenate(label),target_names=LABEL_VALUES_tar))
@@ -287,16 +292,12 @@ if __name__ == '__main__':
                 args.source_name, args.target_name, correct, 100. * correct / len_tar_dataset ))
 
             writer.add_scalars('Accuracy_group', {'CCN_train_acc': CCN_train_acc, 'GCN_acc': GCN_acc, 'CCN_tar_acc': CCN_tar_acc, 'CCN_test_acc': CCN_test_acc}, epoch)
+            recovery.save(epoch + 1, collect(globals(), 'correct acc results acc_test_list CCN_test_acc'))
         io.savemat(os.path.join(args.save_path,'results_'+str(int(flag+1))+'times_'+args.source_name+'.mat'), {'results': results})
         io.savemat(os.path.join(args.save_path,'train_times_'+args.source_name+'.mat'), {'acc_test_list': acc_test_list,'lr':args.lr,'lambda1':args.lambda_1,'lambda2':args.lambda_2})
 
         import json
-        res_dict = {
-            'OA': float(results['Accuracy'] * 100),
-            'AA': float(np.mean(results['TPR']) * 100),
-            'Kappa': float(results['Kappa'] * 100),
-            'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(gt_src.max())}
-        }
+        res_dict = from_confusion(results['Confusion_matrix'], 'best_target_checkpoint')
         os.makedirs('../../ablation_results', exist_ok=True)
         json_path = os.path.join('../../ablation_results', f"TSTnet_results_seed_{args.seed}.json")
         with open(json_path, 'w') as f:

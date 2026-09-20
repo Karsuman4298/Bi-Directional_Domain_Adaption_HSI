@@ -2,6 +2,8 @@
 @author: Huang Yi
 """
 from __future__ import print_function
+from restored_checkpoint import EpochCheckpoint, collect
+from restored_reporting import from_confusion
 import argparse
 import torch.nn as nn
 import torch.optim as optim
@@ -337,7 +339,17 @@ if __name__ == '__main__':
         return acc, pred_list, label_list
 
 
-    for ep in range(1, args.num_epoch + 1):
+    recovery = EpochCheckpoint(dict(G=G, C=C, F1=F1, F2=F2, D=D, D_0=D_0,
+        optimizer_g=optimizer_g, optimizer_d=optimizer_d, optimizer_d0=optimizer_d0,
+        optimizer_f=optimizer_f, optimizer_f1f2=optimizer_f1f2,
+        domain_adv_D=domain_adv_D, domain_adv_D_0=domain_adv_D_0),
+        (train_loader, train_tar_loader, val_loader, test_loader))
+    next_epoch, saved = recovery.load()
+    globals().update(saved)
+    if 'res_dict' in saved:
+        from restored_reporting import atomic_json
+        atomic_json('../../ablation_results/SSWADA_results_seed_' + str(args.seed) + '.json', res_dict)
+    for ep in range(next_epoch or 1, args.num_epoch + 1):
         train(ep, train_loader, train_tar_loader)
         val(val_loader)
         if ep % args.log_interval == 0:
@@ -351,16 +363,12 @@ if __name__ == '__main__':
                            {'lr': args.lr, 'la': args.la, 'gam': args.gam, 'results': results})
                 import json
                 import os
-                res_dict = {
-                    'OA': float(results['Accuracy'] * 100),
-                    'AA': float(np.mean(results['TPR']) * 100),
-                    'Kappa': float(results['Kappa'] * 100),
-                    'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(gt_src.max())}
-                }
+                res_dict = from_confusion(results['Confusion_matrix'], 'best_target_checkpoint')
                 os.makedirs('../../ablation_results', exist_ok=True)
                 json_path = os.path.join('../../ablation_results', f"SSWADA_results_seed_{args.seed}.json")
                 with open(json_path, 'w') as f:
                     json.dump(res_dict, f, indent=4)
                 print('current best acc:', best_acc)
+        recovery.save(ep + 1, collect(globals(), 'best_acc results res_dict'))
     print('current best acc:', best_acc)
 

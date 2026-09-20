@@ -11,3 +11,7 @@ inference_outputs/
 
 # PNG outputs
 *.png
+
+# Restored experiment launcher outputs
+restored_runs/
+.restored_launcher.lock

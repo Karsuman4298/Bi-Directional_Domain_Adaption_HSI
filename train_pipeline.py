@@ -7,9 +7,13 @@ import scipy.io as io
 from utils.utils_HSI import grouper, sliding_window, count_sliding_window
 from utils.utils_HSI import metrics
 from loss.mmd_loss import MMD_loss
+from restored_checkpoint import EpochCheckpoint
+from restored_reporting import from_confusion, atomic_json
 
 def train(network, network_ema, optimizer, criterion, num_classes, train_loader, val_loader, test_loader_noise, test_loader, opts, saving_path, device, scheduler):
 
+    if os.environ.get("BIDA_RUN_DIR"):
+        saving_path = os.path.join(os.environ["BIDA_RUN_DIR"], "checkpoints")
     global_step = 0
     best_test_acc = 0
     losses = []
@@ -17,7 +21,16 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
     Distill_losses = []
     MMD_criterion = MMD_loss()
     
-    for e in tqdm(range(1, opts.epoch+1), desc="training the network"):
+    objects = {'student':network,'teacher':network_ema,'optimizer':optimizer}
+    if scheduler is not None:objects['scheduler'] = scheduler
+    recovery = EpochCheckpoint(objects, (train_loader, test_loader_noise, test_loader, val_loader))
+    next_epoch, saved = recovery.load()
+    global_step = saved.get('global_step', 0)
+    best_test_acc = saved.get('best_test_acc', 0)
+    res_dict = saved.get('res_dict')
+    if res_dict is not None:
+        atomic_json(os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json"), res_dict)
+    for e in tqdm(range(next_epoch or 1, opts.epoch+1), desc="training the network"):
         network.train()
         iter_src = iter(train_loader)
         iter_tar = iter(test_loader_noise)
@@ -104,12 +117,7 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                                 epoch=e, acc=best_test_acc, tmp_acc=ts_acc, seed=opts.seed)
 
                 import json
-                res_dict = {
-                    'OA': float(results['Accuracy']),
-                    'AA': float(np.mean(results['TPR']) * 100),
-                    'Kappa': float(results['Kappa'] * 100),
-                    'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
-                }
+                res_dict = from_confusion(results['Confusion_matrix'], 'best_target_checkpoint')
                 os.makedirs('ablation_results', exist_ok=True)
                 json_path = os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json")
                 with open(json_path, 'w') as f:
@@ -119,6 +127,8 @@ def train(network, network_ema, optimizer, criterion, num_classes, train_loader,
                                         'results' + f'_{best_test_acc:.4f}_{opts.seed}' +'.mat'),
                             {'lr': opts.lr, 'lambda1': opts.lambda1, 'depth': opts.depth, 're_ratio':opts.re_ratio, 'results': results, 
                              'seed': opts.seed, 'lambda2':opts.lambda2})
+
+        recovery.save(e + 1, dict(global_step=global_step, best_test_acc=best_test_acc, res_dict=res_dict))
 
     print(f"Training complete. Loading best model (acc: {best_test_acc:.4f}) and generating final classification report...")
     best_model_path = os.path.join(saving_path, f'model_ts_best{best_test_acc:.4f}_{opts.seed}.pth')
@@ -243,11 +253,22 @@ def softmax_mse_loss(input_logits, target_logits):
 
 
 def train_standard(network, optimizer, criterion, num_classes, train_loader, val_loader, opts, saving_path, device, scheduler):
+    if os.environ.get("BIDA_RUN_DIR"):
+        saving_path = os.path.join(os.environ["BIDA_RUN_DIR"], "checkpoints")
     global_step = 0
     best_test_acc = 0
     losses = []
     
-    for e in tqdm(range(1, opts.epoch+1), desc="training the standard network"):
+    objects = {'student':network,'optimizer':optimizer}
+    if scheduler is not None:objects['scheduler'] = scheduler
+    recovery = EpochCheckpoint(objects, (train_loader, val_loader))
+    next_epoch, saved = recovery.load()
+    global_step = saved.get('global_step', 0)
+    best_test_acc = saved.get('best_test_acc', 0)
+    res_dict = saved.get('res_dict')
+    if res_dict is not None:
+        atomic_json(os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json"), res_dict)
+    for e in tqdm(range(next_epoch or 1, opts.epoch+1), desc="training the standard network"):
         network.train()
         for batch_idx, data_src in enumerate(train_loader):
             images, targets = data_src
@@ -285,12 +306,7 @@ def train_standard(network, optimizer, criterion, num_classes, train_loader, val
                                 epoch=e, acc=best_test_acc, tmp_acc=ts_acc, seed=opts.seed)
 
                 import json
-                res_dict = {
-                    'OA': float(results['Accuracy']),
-                    'AA': float(np.mean(results['TPR']) * 100),
-                    'Kappa': float(results['Kappa'] * 100),
-                    'classes': {str(c+1): float(results['TPR'][c] * 100) for c in range(num_classes)}
-                }
+                res_dict = from_confusion(results['Confusion_matrix'], 'best_target_checkpoint')
                 os.makedirs('ablation_results', exist_ok=True)
                 json_path = os.path.join('ablation_results', f"{opts.model}_results_seed_{opts.seed}.json")
                 with open(json_path, 'w') as f:
@@ -299,6 +315,8 @@ def train_standard(network, optimizer, criterion, num_classes, train_loader, val
                 io.savemat(os.path.join(saving_path,
                                         'results' + f'_{best_test_acc:.4f}_{opts.seed}' +'.mat'),
                             {'lr': opts.lr, 'results': results, 'seed': opts.seed})
+
+        recovery.save(e + 1, dict(global_step=global_step, best_test_acc=best_test_acc, res_dict=res_dict))
 
     print(f"Training complete. Loading best model (acc: {best_test_acc:.4f}) and generating final classification report...")
     best_model_path = os.path.join(saving_path, f'model_ts_best{best_test_acc:.4f}_{opts.seed}.pth')

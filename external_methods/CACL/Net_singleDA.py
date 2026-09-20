@@ -1,3 +1,5 @@
+from restored_checkpoint import EpochCheckpoint, collect
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -323,7 +325,21 @@ def train_network(train_sd_loader, train_patch_src, train_y_src, train_td_loader
     BestAcc = 0
     """training"""
     cnn.train()
-    for epoch in range(EPOCH):
+    best_path = os.path.join(os.environ.get('BIDA_RUN_DIR', './log'), 'CACL_best.pt')
+    os.makedirs(os.path.dirname(best_path), exist_ok=True)
+    recovery = EpochCheckpoint(dict(cnn=cnn, dis=dis, g_optimizer=g_optimizer, d_optimizer=d_optimizer),
+                               (train_sd_loader, train_td_loader, test_loader))
+    next_epoch, saved = recovery.load()
+    BestAcc = saved.get('BestAcc', 0)
+    test_acc = saved.get('test_acc', [])
+    src_spa_prototype = saved.get('src_spa_prototype')
+    src_spe_prototype = saved.get('src_spe_prototype')
+    test_loss = saved.get('test_loss', 0)
+    correct_add = saved.get('correct_add', 0)
+    size = saved.get('size', 0)
+    test_all = saved.get('test_all', [])
+    test_pred_all = saved.get('test_pred_all', [])
+    for epoch in range(next_epoch if next_epoch is not None else 0, EPOCH):
         num_cal = 20
         if (epoch >= num_cal and epoch < EPOCH) and epoch % num_cal == 0:
             src_spa_prototype, src_spe_prototype = prototype_calc(train_patch_src, train_y_src, cnn, Classes)
@@ -419,12 +435,14 @@ def train_network(train_sd_loader, train_patch_src, train_y_src, train_td_loader
                 # Save the parameters in network
                 if test_accuracy > BestAcc:
                     torch.save(cnn.state_dict(),
-                               './log/Net_singleDA_%s.pkl' % (dataset))
+                               best_path)
                     BestAcc = test_accuracy
 
                 cnn.train()  # Open Batch Normalization and Dropout
 
-    cnn.load_state_dict(torch.load('./log/Net_singleDA_%s.pkl' % (dataset)))
+        recovery.save(epoch + 1, collect(locals(), 'BestAcc test_acc src_spa_prototype src_spe_prototype test_loss correct_add size test_all test_pred_all'))
+
+    cnn.load_state_dict(torch.load(best_path))
     cnn.eval()
     predict = np.array([], dtype=np.int64)
     for batch_idx, data in enumerate(test_loader):

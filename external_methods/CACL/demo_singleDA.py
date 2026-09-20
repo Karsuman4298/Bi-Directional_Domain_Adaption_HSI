@@ -79,12 +79,9 @@ def experiment():
     print_args(vars(args))
     
     import json
-    res_dict = {
-        'OA': float(OA) * 100,
-        'AA': float(AA) * 100,
-        'Kappa': float(Kappa) * 100,
-        'classes': {str(i+1): float(CA[i]*100) for i in range(len(CA))}
-    }
+    from restored_reporting import from_predictions
+    res_dict = from_predictions(tar_y.cpu().numpy(), pred.cpu().numpy(), 'best_target_checkpoint')
+
     os.makedirs('../../ablation_results', exist_ok=True)
     json_path = os.path.join('../../ablation_results', f"CACL_results_seed_{args.seed}.json")
     with open(json_path, 'w') as f:
