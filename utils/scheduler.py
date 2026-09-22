@@ -28,14 +28,19 @@ def load_scheduler(model_name, model, opts):
         optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0001)
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [100, 200], gamma=0.1)
 
+
     elif model_name == 'speformer':
         optimizer = optim.Adam(model.parameters(), lr=1e-3)
         # optimizer = optim.Adam(model.parameters(), lr=5e-4)
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [30, 60, 90, 120, 150, 180, 210, 240, 270], gamma=0.9)
 
     elif model_name in ['ssftt', 'BiDA', 'BiDA_Agent', 'AgentBiDA', 'SelfAttnAgentBiDA', 'SelfAttentionAgentBiDA']:
-        # optimizer = optim.Adam(model.parameters(), lr=opts.lr)
-        optimizer = optim.SGD(model.parameters(), lr=opts.lr)
+        import os
+        opt_choice = os.environ.get('BIDA_OPTIMIZER', 'Adam')
+        if opt_choice == 'SGD':
+            optimizer = optim.SGD(model.parameters(), lr=opts.lr)
+        else:
+            optimizer = optim.Adam(model.parameters(), lr=opts.lr)
         scheduler = None
 
     elif model_name == 'GAHT':
