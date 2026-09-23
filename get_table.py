@@ -9,7 +9,7 @@ def parse_logs(model, optimizer, seeds=[2100, 2101, 2102]):
     kappa_scores = []
     
     for seed in seeds:
-        log_file = f"optimizer_test_{model}_{optimizer}_{seed}.log"
+        log_file = f"optimizer_test_18to13_{model}_{optimizer}_{seed}.log"
         if not os.path.exists(log_file):
             print(f"Warning: {log_file} not found!")
             continue

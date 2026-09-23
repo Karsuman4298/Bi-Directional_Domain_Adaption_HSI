@@ -43,14 +43,14 @@ for opt in "${OPTIMIZERS[@]}"; do
         fi
 
         for seed in "${SEEDS[@]}"; do
-            LOG_FILE="optimizer_test_${model}_${opt}_${seed}.log"
+            LOG_FILE="optimizer_test_18to13_${model}_${opt}_${seed}.log"
             echo "Running $model with $opt (LR=$LR) on Seed $seed..."
             echo "Logs saving to -> $LOG_FILE"
             
             CUDA_VISIBLE_DEVICES=0 python3 -u $SCRIPT \
                 --model $model \
-                --source_name Houston13 \
-                --target_name Houston18 \
+                --source_name Houston18 \
+                --target_name Houston13 \
                 --seed $seed \
                 --epoch $EPOCHS \
                 --lr $LR \
