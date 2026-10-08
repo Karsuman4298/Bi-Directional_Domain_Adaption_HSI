@@ -112,13 +112,17 @@ def load_scene(location, dataset_name):
     }
 
 
-def remap_labels(labels, original_ids):
+def remap_labels(labels, original_ids, scene_name=None):
     import numpy as np
     output = np.zeros(labels.shape, dtype=np.int32)
     for class_id, original_id in enumerate(original_ids, 1):
         mask = labels == original_id
         if not mask.any():
-            raise ValueError(f"Shared original class ID {original_id} has no finite labeled pixels")
+            ids, counts = np.unique(labels, return_counts=True)
+            support = dict(zip(map(int, ids), map(int, counts)))
+            scene = f" in {scene_name}" if scene_name else ""
+            raise ValueError(f"Shared original class ID {original_id} has no finite labeled pixels{scene}. "
+                             f"Available finite GT label counts: {support}; expected IDs: {original_ids}")
         output[mask] = class_id
     return output
 
@@ -166,8 +170,8 @@ def prepare(location, cache_root, task, mode, config):
 
     source, source_gt, source_valid, source_meta = load_scene(location, task["source"])
     target, target_gt, target_valid, target_meta = load_scene(location, task["target"])
-    source_gt = remap_labels(source_gt, task["source_ids"])
-    target_gt = remap_labels(target_gt, task["target_ids"])
+    source_gt = remap_labels(source_gt, task["source_ids"], task["source"])
+    target_gt = remap_labels(target_gt, task["target_ids"], task["target"])
     native_bands = [source.shape[-1], target.shape[-1]]
     bands = min(native_bands)
     if native_bands[0] != native_bands[1] and config["band_alignment"] == "error":

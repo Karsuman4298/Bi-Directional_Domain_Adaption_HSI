@@ -1,4 +1,4 @@
-"""Closed-set class correspondences, using the Hugging Face dataset card IDs.
+"""Closed-set class correspondences using original ground-truth label IDs.
 
 IDs refer to the original GT maps, before conversion to contiguous classes.
 Do not equate numerical IDs across scenes: their meanings can differ.
@@ -21,12 +21,14 @@ PAIRS = {
             ["Mineral Extraction Sites", 2, 2],
             ["Non Irrigated Arable Land", 3, 3],
             ["Fruit Trees", 4, 4], ["Olive Groves", 5, 5],
-            ["Coniferous Forest", 7, 6],
-            ["Dense Sclerophyllous Vegetation", 9, 7],
-            ["Sparse Sclerophyllous Vegetation", 10, 8],
-            ["Sparsely Vegetated Areas", 11, 9],
-            ["Rocks and Sand", 12, 10], ["Water", 13, 11],
-            ["Coastal Water", 14, 12],
+            # Dioni retains the original 14-class HyRANK taxonomy. Its
+            # absent classes 6 and 8 leave gaps, not renumbered GT labels.
+            ["Coniferous Forest", 7, 7],
+            ["Dense Sclerophyllous Vegetation", 9, 9],
+            ["Sparse Sclerophyllous Vegetation", 10, 10],
+            ["Sparsely Vegetated Areas", 11, 11],
+            ["Rocks and Sand", 12, 12], ["Water", 13, 13],
+            ["Coastal Water", 14, 14],
         ],
         "assumptions": [],
     },

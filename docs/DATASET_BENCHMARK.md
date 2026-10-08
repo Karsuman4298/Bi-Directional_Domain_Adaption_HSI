@@ -64,6 +64,14 @@ resumes download from that same commit. The default download directory is
 PaviaU and PaviaC resolve to the Hub's `Pavia_University/` and `Pavia_Center/`
 folders. `NiliFossae` is the Hub spelling of Nilifossae.
 
+Loukia and Dioni use the original HyRANK 14-class label taxonomy. Dioni has
+12 present classes but retains raw IDs **1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14**.
+The Hub card's consecutive enumeration of its 12 class names does not describe
+these raw GT IDs. Both scenes use the IDs above for the shared classes, then
+the adapter maps them to contiguous IDs 1–12. Broad-leaved and mixed forest
+(raw IDs 6 and 8) are excluded. See the original
+[ISPRS HyRANK taxonomy](https://www.isprs.org/society/si/SI-2017/ISPRS-SI2017-TC3_WG4_Karantzalos_Report.pdf).
+
 This is a **closed-set shared-class experiment**. Scene-specific classes and
 background receive the ignored label. The adapter remaps shared classes to the
 same contiguous IDs in both scenes; identical raw numbers are not assumed to
@@ -80,6 +88,16 @@ containing `datasets`, `classes` and optionally `assumptions`. Each `classes` ro
 is `["Class name", first_scene_original_ID, second_scene_original_ID]`. Class
 names and original IDs must be unique within each pair. An absent selected class
 causes a visible preparation failure rather than an invented accuracy.
+These errors identify the scene and show its finite GT label counts to help
+diagnose mismatches between class descriptions and actual MAT labels.
+
+If an earlier run failed with `Shared original class ID 6 has no finite labeled
+pixels` for Loukia/Dioni, update the checkout after the launcher has stopped and
+start with a new output directory, for example `--output
+benchmark_runs/all_datasets_fixed_hyrank`. The corrected mapping changes the
+configuration and code fingerprint, so `--resume` on the old output is rejected.
+Keep the existing `--data-dir` and use the old configuration's `hf_revision` with
+`--hf-revision` to reuse the same downloaded MAT files.
 
 Both standard MAT files and MATLAB v7.3/HDF5 files are supported. The loader
 finds the cube and GT file, validates the numeric arrays and spatial alignment,

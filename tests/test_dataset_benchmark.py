@@ -25,6 +25,23 @@ from run_dataset_benchmark import ENTRIES, ROOT, complete, method_arguments, sna
 
 
 class CatalogTests(unittest.TestCase):
+    def test_hyrank_raw_ids_preserve_absent_class_gaps(self):
+        shared = [1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14]
+        scenes = {"Loukia": np.arange(15).reshape(1, -1),
+                  "Dioni": np.array([0] + shared).reshape(1, -1)}
+        for task in directions(["Loukia-Dioni"]):
+            self.assertEqual(task["source_ids"], shared)
+            self.assertEqual(task["target_ids"], shared)
+            for role in ("source", "target"):
+                raw = scenes[task[role]]
+                mapped = remap_labels(raw, task[role + "_ids"], task[role])
+                np.testing.assert_array_equal(mapped[raw == 7], [6])
+                np.testing.assert_array_equal(mapped[raw == 9], [7])
+                np.testing.assert_array_equal(mapped[raw == 14], [12])
+                self.assertTrue(np.all(mapped[np.isin(raw, [0, 6, 8])] == 0))
+        with self.assertRaisesRegex(ValueError, "in Dioni.*Available finite GT label counts"):
+            remap_labels(scenes["Dioni"], list(range(1, 13)), "Dioni")
+
     def test_eight_directions_and_semantic_reverse(self):
         tasks = list(directions(list(PAIRS)))
         self.assertEqual(len(tasks), 8)
