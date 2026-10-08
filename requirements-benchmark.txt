@@ -1,0 +1,16 @@
+# Install a CUDA-compatible torch + torchvision first in a separate server env.
+-r requirements.txt
+# Legacy cleanlab recipes need its 1.x API and pre-NumPy-2 scientific packages.
+numpy>=1.23,<2
+scipy>=1.10,<1.13
+scikit-learn>=1.2,<1.4
+h5py>=3.8
+hdf5storage>=0.1.19,<0.2
+huggingface_hub>=0.23
+cleanlab==1.0.1
+scikit-image>=0.20,<0.25
+opencv-contrib-python-headless>=4.7,<4.12
+pandas>=1.5,<3
+tensorboardX>=2.6
+torch-geometric>=2.4
+torchsampler>=0.1.2
