@@ -233,7 +233,8 @@ def main():
     parser.add_argument("--pairs", choices=list(PAIRS), nargs="+", default=list(PAIRS))
     parser.add_argument("--models", choices=METHODS, nargs="+", default=METHODS)
     parser.add_argument("--epochs", type=int, default=120)
-    parser.add_argument("--seeds", type=int, nargs="+", default=[2100, 2101, 2102])
+    parser.add_argument("--seeds", type=int, nargs=1, default=[2100],
+                        help="One training seed shared by every method (default: 2100)")
     parser.add_argument("--num-agents", type=int, default=4)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--band-alignment", choices=("resample", "truncate", "error"), default="resample")

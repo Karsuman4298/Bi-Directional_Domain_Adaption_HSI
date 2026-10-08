@@ -1,7 +1,6 @@
 """One Markdown report containing every configured direction, mode and method."""
 import json
 from pathlib import Path
-import statistics
 
 from .catalog import PROTOCOLS, UNAVAILABLE_METHODS
 from .metrics import validate
@@ -17,27 +16,28 @@ def read_json(path):
 def cell(values, required):
     if len(values) != required:
         return "pending"
-    mean = statistics.mean(values)
-    return f"{mean:.2f} (n=1)" if required == 1 else f"{mean:.2f} ± {statistics.stdev(values):.2f}"
+    return f"{values[0]:.2f}"
 
 
 def write_report(root, configuration):
     root = Path(root)
     seeds = configuration["seeds"]
+    if len(seeds) != 1:
+        raise ValueError("This benchmark requires exactly one training seed; use a new output directory for a single-seed run")
     methods = configuration["models"]
     lines = [
         "# Multi-dataset HSI experiments", "",
         "Data source: [Tanishq165/HSI_Datasets](https://huggingface.co/datasets/Tanishq165/HSI_Datasets).", "",
         f"Pinned Hub commit: `{configuration.get('hf_revision', 'not resolved')}`. "
-        f"Requested epochs: {configuration['epochs']}; seeds: {', '.join(map(str, seeds))}.", "",
+        f"Requested epochs: {configuration['epochs']}; training seed: {seeds[0]}.", "",
         "PCA runs use exactly `PCA(n_components=30)`. One source-fitted transform is shared "
-        "by all methods and seeds for a direction. No-PCA runs retain the aligned spectral bands.", "",
+        "by all methods for a direction. No-PCA runs retain the aligned spectral bands.", "",
         f"Band alignment policy: `{configuration['preprocessing']['band_alignment']}`. "
         "For unequal spectra, resample means linear interpolation on normalized band index; "
         "truncate means keeping the first min(source bands, target bands) bands. "
         "Neither establishes physical wavelength correspondence.", "",
-        "Metrics are percentages; Kappa is multiplied by 100. Every aggregate requires all "
-        "configured seeds and uses sample standard deviation (ddof=1). Failed or missing runs "
+        "Metrics are percentages; Kappa is multiplied by 100. Scores come from one training "
+        "seed with no averaging or standard deviation. Failed or missing runs "
         "show pending and contribute no invented scores.", "",
         "These are adapted existing recipes with a common input preprocessing and closed-set "
         "class mapping. Their sampling, patch sizes, optimization, target supervision and "

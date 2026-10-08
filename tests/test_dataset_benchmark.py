@@ -4,7 +4,6 @@ python -m unittest discover -s tests -p 'test_dataset_benchmark.py'
 No real dataset download, training, CUDA allocation or legacy entry execution.
 """
 import ast
-import copy
 import json
 import os
 from pathlib import Path
@@ -197,13 +196,15 @@ class MetricsAndReportingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             from_confusion([[3, 0], [0, 0]], "final_epoch")
 
-    def test_partial_seeds_are_pending_and_stale_scores_are_rejected(self):
+    def test_single_seed_scores_and_stale_scores_are_rejected(self):
         task = next(directions(["Utopia-NiliFossae"], "forward"))
-        config = {"tasks": [task], "modes": ["pca30"], "models": ["GAHT"], "seeds": [1, 2],
+        config = {"tasks": [task], "modes": ["pca30"], "models": ["GAHT"], "seeds": [1],
                   "epochs": 1, "run_fingerprint": "fixture", "hf_revision": "fixture",
                   "preprocessing": {"band_alignment": "resample"}}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            write_report(root, config)
+            self.assertIn("| GAHT | 0/1 | pending | pending | pending |", (root / "results.md").read_text())
             destination = root / "runs" / task["direction"] / "pca30" / "GAHT" / "1"
             fingerprint = "fixture/" + task["direction"] + "/pca30/GAHT/1"
             score = from_confusion(np.eye(4, dtype=int), "final_epoch")
@@ -213,15 +214,16 @@ class MetricsAndReportingTests(unittest.TestCase):
             self.assertTrue(complete(destination, fingerprint, 4))
             self.assertFalse(complete(destination, "different", 4))
             write_report(root, config)
-            self.assertIn("| GAHT | 1/2 | pending | pending | pending |", (root / "results.md").read_text())
-            second = destination.parent / "2"
-            second_fingerprint = fingerprint[:-1] + "2"
-            second_score = copy.deepcopy(score)
-            second_score["run_fingerprint"] = second_fingerprint
-            atomic_json(second / "result.json", second_score)
-            atomic_json(second / "status.json", {"state": "complete", "run_fingerprint": second_fingerprint})
+            report = (root / "results.md").read_text()
+            self.assertIn("| GAHT | 1/1 | 100.00 | 100.00 | 100.00 |", report)
+            self.assertNotIn("±", report)
+            score["run_fingerprint"] = "different"
+            atomic_json(destination / "result.json", score)
             write_report(root, config)
-            self.assertIn("| GAHT | 2/2 | 100.00 ± 0.00 |", (root / "results.md").read_text())
+            self.assertIn("| GAHT | 0/1 | pending | pending | pending |", (root / "results.md").read_text())
+            config["seeds"] = [1, 2]
+            with self.assertRaisesRegex(ValueError, "exactly one training seed"):
+                write_report(root, config)
 
 
 if __name__ == "__main__":

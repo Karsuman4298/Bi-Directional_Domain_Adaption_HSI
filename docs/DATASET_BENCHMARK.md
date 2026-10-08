@@ -28,7 +28,8 @@ CUDA_VISIBLE_DEVICES=0 bash run_all_dataset_experiments.sh
 ```
 
 Defaults: **12 implemented methods × 8 directions × 2 preprocessing settings ×
-3 seeds = 576 runs**, each requesting 120 epochs. Jobs run sequentially on the
+1 seed = 192 runs**, using training seed **2100**, each requesting 120 epochs.
+Jobs run sequentially on the
 selected GPU to avoid GPU-memory contention. `CUDA_VISIBLE_DEVICES=2` selects
 physical GPU 2; each method uses logical CUDA device 0 inside that selection.
 `PYTHON_BIN=/path/to/environment/bin/python` selects a Python interpreter.
@@ -87,8 +88,8 @@ and masks nonfinite spectra before class mapping.
 ## PCA and no-PCA preprocessing
 
 Every method receives the **same prepared arrays** for a direction and mode,
-reused across all seeds. The preprocessing seed defaults to 0 and is independent
-of the model-training seeds.
+shared by all methods. The preprocessing seed defaults to 0 and is independent
+of the single model-training seed.
 
 1. Align the two spectral dimensions if their native band counts differ.
 2. Select up to 100,000 finite source spectra without consulting their labels.
@@ -173,10 +174,10 @@ benchmark_runs/all_datasets/results.md
 ```
 
 It contains all **16 direction/mode sections**, with OA, AA, Kappa ×100 and a
-per-class recall table for every method. Each metric reports **mean ± sample
-standard deviation over all configured seeds**. A single seed is explicitly
-labeled `n=1`. Partial or failed sets show `pending`; no zero scores, best-seed
-selection or averaging over only successful seeds is used.
+per-class recall table for every method. Each metric reports the **single-run
+score**, with no averaging or standard deviation. Missing or failed runs show
+`pending`; no zero scores or best-seed selection is used. The training seed is
+recorded in the report and configuration. Exactly one training seed is accepted.
 
 ```text
 benchmark_runs/all_datasets/
@@ -265,11 +266,11 @@ CUDA_VISIBLE_DEVICES=0 bash run_all_dataset_experiments.sh \
   --output benchmark_runs/server_smoke
 ```
 
-Customize epochs/seeds or use a subset of the implemented methods:
+Customize epochs or the single training seed, or use a subset of the implemented methods:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 bash run_all_dataset_experiments.sh \
-  --epochs 200 --seeds 2100 2101 2102 \
+  --epochs 200 --seeds 2100 \
   --models GAHT BiDA TSTnet CLDA SCLUDA MLUDA SSWADA CACL PCADA MDGTnet \
   --data-dir /scratch/hsi_data --output /scratch/hsi_results
 ```
